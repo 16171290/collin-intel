@@ -433,6 +433,7 @@ def _parse_table(html: str, current_year: int) -> tuple[list[dict], bool]:
 
     return records, all_old
 
+# FIX: wait for networkidle after next-page click instead of a bare sleep
 async def _click_next(page: Page) -> bool:
     try:
         btn = page.locator("button[aria-label='next page']").first
@@ -440,14 +441,19 @@ async def _click_next(page: Page) -> bool:
             disabled = await btn.get_attribute("disabled")
             if disabled is None:
                 await btn.click()
-                await asyncio.sleep(3)
+                # Wait for the table to re-render with new data
+                try:
+                    await page.wait_for_load_state("networkidle", timeout=10_000)
+                except Exception:
+                    await asyncio.sleep(3)  # fallback
                 return True
     except Exception:
         pass
     return False
 
+# FIX: wait for the results table (or a no-results indicator) before returning,
+#      instead of a fixed sleep that races the React data fetch.
 async def _apply_year_filter(page: Page, year: int) -> None:
-    """Apply the year checkbox filter using JavaScript to bypass hidden input."""
     try:
         clicked = await page.evaluate(f"""
             (() => {{
@@ -457,8 +463,17 @@ async def _apply_year_filter(page: Page, year: int) -> None:
             }})()
         """)
         if clicked:
-            await asyncio.sleep(3)
             log.info("  Year %d filter applied", year)
+            try:
+                # Wait for a table OR a no-results/empty-state element
+                await page.wait_for_selector(
+                    "table, [class*='no-results'], [class*='empty'], [class*='zero']",
+                    timeout=20_000,
+                )
+            except Exception:
+                # Selector never appeared — fall back to a generous sleep
+                log.warning("  Timed out waiting for results after year filter; sleeping 8s")
+                await asyncio.sleep(8)
         else:
             log.warning("  Year %d checkbox not found", year)
     except Exception as exc:
@@ -547,7 +562,7 @@ async def run_clerk_scrape(current_year: int) -> list[dict]:
             return all_records
 
         try:
-            # Apply year filter
+            # Apply year filter — now waits for the table before returning
             await _apply_year_filter(page, current_year)
             await screenshot(page, "after_filter")
             await save_html(page, "after_filter")
@@ -558,6 +573,13 @@ async def run_clerk_scrape(current_year: int) -> list[dict]:
             max_pages = 2000
 
             while page_num <= max_pages:
+                # FIX: wait for the table to be present before reading HTML,
+                #      so we never parse a still-loading React skeleton.
+                try:
+                    await page.wait_for_selector("table", timeout=15_000)
+                except Exception:
+                    log.warning("Page %d: table selector timed out", page_num)
+
                 html = await page.content()
                 recs, all_old = _parse_table(html, current_year)
                 log.info("Page %d: %d records (all_old=%s) | total so far: %d",
