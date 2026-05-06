@@ -627,7 +627,7 @@ async def run_clerk_scrape(cutoff: datetime) -> list[dict]:
             return all_records
 
         try:
-            # No year filter — we paginate until records are older than cutoff
+            await _apply_year_filter(page, cutoff.year)
             await screenshot(page, "after_filter")
             await save_html(page, "after_filter")
 
@@ -647,14 +647,13 @@ async def run_clerk_scrape(cutoff: datetime) -> list[dict]:
                          page_num, len(recs), all_old, len(all_records))
                 all_records.extend(recs)
 
-                if all_old and page_num > 2:
-                    consecutive_old += 1
-                    if consecutive_old >= 3:
-                        log.info("3 consecutive old pages — stopping at page %d",
-                                 page_num)
-                        break
-                else:
-                    consecutive_old = 0
+                if all_old and page_num > 1:
+                    # Every record on this page is older than the cutoff window.
+                    # Since the site sorts newest-first and the year filter is on,
+                    # there's nothing more recent further back — stop now.
+                    log.info("All records on page %d are older than cutoff — done",
+                             page_num)
+                    break
 
                 if not await _click_next(page):
                     log.info("No more pages after page %d", page_num)
