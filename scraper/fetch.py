@@ -3,7 +3,7 @@
 Collin County, Texas — Motivated Seller Lead Scraper
 Clerk portal : https://collin.tx.publicsearch.us/
 Parcel data  : Texas Open Data Socrata ahis-pci3
-Pull all records for current year
+Runs daily — pulls records filed in the last 7 days.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ logging.basicConfig(
 log = logging.getLogger("collin_scraper")
 
 CLERK_BASE     = "https://collin.tx.publicsearch.us"
-CURRENT_YEAR   = datetime.now().year
+LOOKBACK_DAYS  = 7   # pull records filed within this many days
 RETRY_ATTEMPTS = 3
 RETRY_DELAY    = 5
 DEBUG          = True
@@ -192,7 +192,7 @@ async def save_html(page: Page, name: str) -> None:
 
 
 # ==============================================================================
-#  PARCEL LOOKUP  (async + concurrent via thread pool)
+#  PARCEL LOOKUP  (batched Socrata + async concurrent ArcGIS fallback)
 # ==============================================================================
 
 _parcel_cache: dict[str, dict] = {}
@@ -201,89 +201,114 @@ _parcel_cache: dict[str, dict] = {}
 _session = requests.Session()
 _session.headers.update({"Accept": "application/json"})
 
+# How many owner names to pack into a single Socrata IN() query
+SOCRATA_BATCH_SIZE = 50
 
-def _socrata_lookup(owner_variant: str) -> dict:
-    safe_name = owner_variant.replace("'", "''")
-    for endpoint in [SOCRATA_OWNER, SOCRATA_APPR]:
-        try:
-            resp = _session.get(
-                endpoint,
-                params={"$where": f"ownername = '{safe_name}'", "$limit": 1},
-                timeout=10,
-            )
-            if resp.status_code != 200:
-                continue
-            rows = resp.json()
-            if not (isinstance(rows, list) and rows):
-                continue
-            r = rows[0]
-            situs      = safe_str(r.get("situsconcat", ""))
-            mail_addr  = safe_str(r.get("owneraddrline1", ""))
-            mail_city  = safe_str(r.get("owneraddrcity", ""))
-            mail_state = safe_str(r.get("owneraddrstate", "")) or "TX"
-            mail_zip   = safe_str(r.get("owneraddrzip", ""))
-            if "-" in mail_zip:
-                mail_zip = mail_zip.split("-")[0]
-            prop_addr, prop_city, prop_state, prop_zip = _parse_situsconcat(situs)
-            if prop_addr or mail_addr:
-                return {
-                    "prop_address": prop_addr,
-                    "prop_city":    prop_city,
-                    "prop_state":   prop_state or "TX",
-                    "prop_zip":     prop_zip,
-                    "mail_address": mail_addr,
-                    "mail_city":    mail_city,
-                    "mail_state":   mail_state,
-                    "mail_zip":     mail_zip,
-                }
-        except Exception as exc:
-            log.debug("Socrata error %r: %s", owner_variant[:40], exc)
-    return {}
 
-def _socrata_fuzzy(owner_variant: str) -> dict:
-    parts = owner_variant.strip().split()
-    if not parts:
+def _row_to_parcel(r: dict) -> dict:
+    """Convert a raw Socrata row into a normalised parcel dict."""
+    situs      = safe_str(r.get("situsconcat", ""))
+    mail_addr  = safe_str(r.get("owneraddrline1", ""))
+    mail_city  = safe_str(r.get("owneraddrcity", ""))
+    mail_state = safe_str(r.get("owneraddrstate", "")) or "TX"
+    mail_zip   = safe_str(r.get("owneraddrzip", ""))
+    if "-" in mail_zip:
+        mail_zip = mail_zip.split("-")[0]
+    prop_addr, prop_city, prop_state, prop_zip = _parse_situsconcat(situs)
+    return {
+        "prop_address": prop_addr,
+        "prop_city":    prop_city,
+        "prop_state":   prop_state or "TX",
+        "prop_zip":     prop_zip,
+        "mail_address": mail_addr,
+        "mail_city":    mail_city,
+        "mail_state":   mail_state,
+        "mail_zip":     mail_zip,
+    }
+
+
+def _socrata_batch(owner_keys: list[str], endpoint: str) -> dict[str, dict]:
+    """
+    Fetch up to SOCRATA_BATCH_SIZE owners in one IN() query.
+    Returns {upper_owner_name: parcel_dict} for every hit.
+    """
+    if not owner_keys:
         return {}
-    search_word = next((p for p in parts if len(p) > 2), parts[0])
-    safe_word = search_word.replace("'", "''")
+    quoted = ", ".join(f"'{n.replace(chr(39), chr(39)*2)}'" for n in owner_keys)
+    where  = f"ownername IN ({quoted})"
+    try:
+        resp = _session.get(
+            endpoint,
+            params={"$where": where, "$limit": len(owner_keys) * 3},
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            return {}
+        rows = resp.json()
+        if not isinstance(rows, list):
+            return {}
+        result: dict[str, dict] = {}
+        for r in rows:
+            key = safe_str(r.get("ownername", "")).upper()
+            if key and key not in result:
+                parcel = _row_to_parcel(r)
+                if parcel["prop_address"] or parcel["mail_address"]:
+                    result[key] = parcel
+        return result
+    except Exception as exc:
+        log.debug("Socrata batch error: %s", exc)
+        return {}
+
+
+def socrata_batch_lookup(owners: list[str]) -> dict[str, dict]:
+    """
+    Look up a list of unique owner name strings against both Socrata
+    endpoints using batched IN() queries.  Returns {upper_name: parcel}.
+    """
+    # Build the full set of (key → canonical_name) pairs we need to look up,
+    # skipping anything already cached.
+    needed: dict[str, str] = {}  # upper_variant -> original owner key
+    for owner in owners:
+        cache_key = owner.strip().upper()
+        if cache_key in _parcel_cache:
+            continue
+        for variant in name_variants(owner):
+            vkey = variant.strip().upper()
+            if vkey not in needed:
+                needed[vkey] = cache_key
+
+    if not needed:
+        return {}
+
+    variant_list = list(needed.keys())
+    found: dict[str, dict] = {}  # upper_variant -> parcel
+
     for endpoint in [SOCRATA_OWNER, SOCRATA_APPR]:
-        try:
-            resp = _session.get(
-                endpoint,
-                params={"$where": f"ownername LIKE '%{safe_word}%'", "$limit": 5},
-                timeout=10,
-            )
-            if resp.status_code != 200:
-                continue
-            rows = resp.json()
-            if not (isinstance(rows, list) and rows):
-                continue
-            for r in rows:
-                rname = safe_str(r.get("ownername", "")).upper()
-                sig_parts = [p for p in parts if len(p) > 2]
-                if all(p in rname for p in sig_parts):
-                    situs      = safe_str(r.get("situsconcat", ""))
-                    mail_addr  = safe_str(r.get("owneraddrline1", ""))
-                    mail_city  = safe_str(r.get("owneraddrcity", ""))
-                    mail_state = safe_str(r.get("owneraddrstate", "")) or "TX"
-                    mail_zip   = safe_str(r.get("owneraddrzip", ""))
-                    if "-" in mail_zip:
-                        mail_zip = mail_zip.split("-")[0]
-                    prop_addr, prop_city, prop_state, prop_zip = _parse_situsconcat(situs)
-                    if prop_addr or mail_addr:
-                        return {
-                            "prop_address": prop_addr,
-                            "prop_city":    prop_city,
-                            "prop_state":   prop_state or "TX",
-                            "prop_zip":     prop_zip,
-                            "mail_address": mail_addr,
-                            "mail_city":    mail_city,
-                            "mail_state":   mail_state,
-                            "mail_zip":     mail_zip,
-                        }
-        except Exception as exc:
-            log.debug("Socrata fuzzy error %r: %s", owner_variant[:40], exc)
-    return {}
+        # Only query variants we haven't resolved yet
+        remaining = [v for v in variant_list if needed[v] not in found.values()
+                     and v not in found]
+        if not remaining:
+            break
+        # Chunk into batches
+        for i in range(0, len(remaining), SOCRATA_BATCH_SIZE):
+            chunk = remaining[i : i + SOCRATA_BATCH_SIZE]
+            hits  = _socrata_batch(chunk, endpoint)
+            found.update(hits)
+
+    # Populate the cache: map each original owner key to its result
+    results: dict[str, dict] = {}
+    for variant, cache_key in needed.items():
+        if cache_key in _parcel_cache:
+            continue
+        if variant in found:
+            _parcel_cache[cache_key] = found[variant]
+            results[cache_key] = found[variant]
+        else:
+            # Will be filled in by ArcGIS / fuzzy fallback later
+            pass
+
+    return results
+
 
 def _arcgis_lookup(owner_variant: str) -> dict:
     safe_name = owner_variant.replace("'", "''")
@@ -327,31 +352,68 @@ def _arcgis_lookup(owner_variant: str) -> dict:
         log.debug("ArcGIS error %r: %s", owner_variant[:40], exc)
         return {}
 
+def _socrata_fuzzy(owner_variant: str) -> dict:
+    """Single-owner fuzzy LIKE fallback — only used when batch + ArcGIS both miss."""
+    parts = owner_variant.strip().split()
+    if not parts:
+        return {}
+    search_word = next((p for p in parts if len(p) > 2), parts[0])
+    safe_word = search_word.replace("'", "''")
+    for endpoint in [SOCRATA_OWNER, SOCRATA_APPR]:
+        try:
+            resp = _session.get(
+                endpoint,
+                params={"$where": f"ownername LIKE '%{safe_word}%'", "$limit": 5},
+                timeout=10,
+            )
+            if resp.status_code != 200:
+                continue
+            rows = resp.json()
+            if not (isinstance(rows, list) and rows):
+                continue
+            for r in rows:
+                rname = safe_str(r.get("ownername", "")).upper()
+                sig_parts = [p for p in parts if len(p) > 2]
+                if all(p in rname for p in sig_parts):
+                    parcel = _row_to_parcel(r)
+                    if parcel["prop_address"] or parcel["mail_address"]:
+                        return parcel
+        except Exception as exc:
+            log.debug("Socrata fuzzy error %r: %s", owner_variant[:40], exc)
+    return {}
+
 def _lookup_parcel_sync(owner: str) -> dict:
-    """Blocking parcel lookup — runs in a thread pool worker."""
+    """
+    Per-record fallback for owners that the batch pass missed.
+    Tries ArcGIS then fuzzy Socrata.
+    """
     if not owner:
         return {}
     cache_key = owner.strip().upper()
     if cache_key in _parcel_cache:
         return _parcel_cache[cache_key]
-    result: dict = {}
-    for variant in name_variants(owner):
-        result = _socrata_lookup(variant)
-        if result.get("prop_address") or result.get("mail_address"):
-            _parcel_cache[cache_key] = result
-            return result
+    # ArcGIS fallback
     for variant in name_variants(owner):
         result = _arcgis_lookup(variant)
         if result.get("prop_address") or result.get("mail_address"):
             _parcel_cache[cache_key] = result
             return result
+    # Fuzzy Socrata last resort
     if len(owner.split()) <= 3:
         result = _socrata_fuzzy(owner.strip().upper())
-    _parcel_cache[cache_key] = result
-    return result
+        _parcel_cache[cache_key] = result
+        return result
+    _parcel_cache[cache_key] = {}
+    return {}
 
 async def lookup_parcel_async(owner: str, sem: asyncio.Semaphore) -> dict:
-    """Run the blocking lookup in a thread so the event loop stays free."""
+    """
+    Used for the per-record ArcGIS/fuzzy fallback pass only.
+    The bulk of lookups are resolved by socrata_batch_lookup() before this runs.
+    """
+    cache_key = owner.strip().upper()
+    if cache_key in _parcel_cache:
+        return _parcel_cache[cache_key]
     async with sem:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, _lookup_parcel_sync, owner)
@@ -368,11 +430,12 @@ def build_search_url(term: str) -> str:
         f"&searchTerm={term}"
     )
 
-def _parse_table(html: str, current_year: int) -> tuple[list[dict], bool]:
+def _parse_table(html: str, cutoff: datetime) -> tuple[list[dict], bool]:
     """
-    Parse the results table keeping only records from current_year.
-    Returns (records, all_old) where all_old=True means every record
-    on this page is from a prior year — signal to stop paginating.
+    Parse the results table keeping only records filed on or after cutoff.
+    Returns (records, all_old) where all_old=True means every record on
+    this page is older than the cutoff — signal to stop paginating.
+    The site returns results newest-first, so hitting all_old means we're done.
     """
     soup = BeautifulSoup(html, "lxml")
     records = []
@@ -413,12 +476,12 @@ def _parse_table(html: str, current_year: int) -> tuple[list[dict], bool]:
         except ValueError:
             continue
 
-        if rec_date.year < current_year:
+        if rec_date < cutoff:
+            # Older than our lookback window — skip but keep all_old=True
+            # so we stop paginating once we've seen 3 consecutive old pages.
             continue
-        elif rec_date.year > current_year:
-            continue
-        else:
-            all_old = False
+
+        all_old = False  # at least one record is within the window
 
         if not owner or owner == "N/A":
             continue
@@ -482,7 +545,7 @@ async def _apply_year_filter(page: Page, year: int) -> None:
     except Exception as exc:
         log.warning("  Year filter error: %s", exc)
 
-async def run_clerk_scrape(current_year: int) -> list[dict]:
+async def run_clerk_scrape(cutoff: datetime) -> list[dict]:
     all_records: list[dict] = []
     search_terms = ["RELLP", "JUD", "CCJ", "LNHOA", "NOC", "PRO",
                     "LN", "LNMECH", "LNIRS", "LNFED",
@@ -564,7 +627,7 @@ async def run_clerk_scrape(current_year: int) -> list[dict]:
             return all_records
 
         try:
-            await _apply_year_filter(page, current_year)
+            # No year filter — we paginate until records are older than cutoff
             await screenshot(page, "after_filter")
             await save_html(page, "after_filter")
 
@@ -579,7 +642,7 @@ async def run_clerk_scrape(current_year: int) -> list[dict]:
                     log.warning("Page %d: table selector timed out", page_num)
 
                 html = await page.content()
-                recs, all_old = _parse_table(html, current_year)
+                recs, all_old = _parse_table(html, cutoff)
                 log.info("Page %d: %d records (all_old=%s) | total so far: %d",
                          page_num, len(recs), all_old, len(all_records))
                 all_records.extend(recs)
@@ -656,9 +719,10 @@ def compute_score(rec: dict, flags: list[str]) -> int:
 
 async def assemble_records_async(raw_records: list[dict], today: datetime) -> list[dict]:
     """
-    Deduplicate, then fire all parcel lookups concurrently (up to
-    PARCEL_CONCURRENCY at a time) instead of serially one-by-one.
-    10,000 records that took 5+ hours now completes in ~10 minutes.
+    Deduplicate, then:
+      1. Batch-query Socrata with IN() — one request per 50 names instead of
+         one request per name.  Resolves the majority of owners in seconds.
+      2. Concurrently fall back to ArcGIS + fuzzy Socrata for the misses.
     """
     # --- deduplicate first ---
     deduped: list[dict] = []
@@ -677,21 +741,54 @@ async def assemble_records_async(raw_records: list[dict], today: datetime) -> li
     total = len(deduped)
     log.info("Unique records after dedup: %d (from %d raw)", total, len(raw_records))
 
-    # --- concurrent parcel lookups ---
+    # --- PASS 1: batched Socrata IN() queries (runs in a thread, non-blocking) ---
+    unique_owners = list({safe_str(r.get("owner", "")) for r in deduped if r.get("owner")})
+    log.info("Pass 1: batched Socrata lookup for %d unique owners "
+             "(%d batches of %d)...",
+             len(unique_owners),
+             -(-len(unique_owners) // SOCRATA_BATCH_SIZE),  # ceil division
+             SOCRATA_BATCH_SIZE)
+
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, socrata_batch_lookup, unique_owners)
+
+    batch_hits = sum(1 for o in unique_owners if _parcel_cache.get(o.strip().upper()))
+    log.info("Pass 1 done: %d / %d owners resolved via Socrata batch", batch_hits, len(unique_owners))
+
+    # --- PASS 2: concurrent ArcGIS + fuzzy fallback for remaining misses ---
+    misses = [o for o in unique_owners if not _parcel_cache.get(o.strip().upper())]
+    log.info("Pass 2: concurrent ArcGIS/fuzzy fallback for %d misses "
+             "(concurrency=%d)...", len(misses), PARCEL_CONCURRENCY)
+
     sem = asyncio.Semaphore(PARCEL_CONCURRENCY)
+    fallback_done = 0
+
+    async def _fallback(owner: str) -> None:
+        nonlocal fallback_done
+        await lookup_parcel_async(owner, sem)
+        fallback_done += 1
+        if fallback_done % 100 == 0:
+            log.info("  Fallback %d/%d", fallback_done, len(misses))
+
+    await asyncio.gather(*[_fallback(o) for o in misses])
+
+    final_hits = sum(1 for o in unique_owners
+                     if _parcel_cache.get(o.strip().upper(), {}).get("prop_address")
+                     or _parcel_cache.get(o.strip().upper(), {}).get("mail_address"))
+    log.info("Pass 2 done: %d total owners with address data", final_hits)
+
+    # --- pull results from cache for every record ---
     completed = 0
 
-    async def _lookup_with_progress(raw: dict) -> dict:
+    async def _get_parcel(raw: dict) -> dict:
         nonlocal completed
         owner = safe_str(raw.get("owner", ""))
-        parcel = await lookup_parcel_async(owner, sem)
+        cache_key = owner.strip().upper()
+        parcel = _parcel_cache.get(cache_key, {})
         completed += 1
-        if completed % 100 == 0:
-            log.info("  Parcel lookup %d/%d (cache: %d)", completed, total, len(_parcel_cache))
         return parcel
 
-    log.info("Starting concurrent parcel lookups (concurrency=%d)...", PARCEL_CONCURRENCY)
-    parcels = await asyncio.gather(*[_lookup_with_progress(raw) for raw in deduped])
+    parcels = await asyncio.gather(*[_get_parcel(raw) for raw in deduped])
 
     # --- assemble final records ---
     assembled: list[dict] = []
@@ -735,11 +832,11 @@ async def assemble_records_async(raw_records: list[dict], today: datetime) -> li
     return assembled
 
 
-def save_output(records: list[dict], current_year: int) -> None:
+def save_output(records: list[dict], cutoff: datetime) -> None:
     payload = {
         "fetched_at":   datetime.now(timezone.utc).isoformat(),
         "source":       "Collin County Clerk / Collin CAD",
-        "date_range":   {"from": f"1/1/{current_year}", "to": "present"},
+        "date_range":   {"from": cutoff.strftime("%-m/%-d/%Y"), "to": "present"},
         "total":        len(records),
         "with_address": sum(1 for r in records if r.get("prop_address")),
         "records":      records,
@@ -801,19 +898,19 @@ def export_ghl_csv(records: list[dict]) -> None:
 
 async def main() -> None:
     today = datetime.now()
-    current_year = today.year
+    cutoff = today - timedelta(days=LOOKBACK_DAYS)
 
     log.info("=" * 60)
     log.info("Collin County Motivated Seller Scraper")
-    log.info("Pulling all records for year: %d", current_year)
+    log.info("Pulling records filed on or after: %s", cutoff.strftime("%m/%d/%Y"))
     log.info("=" * 60)
 
-    raw_records = await run_clerk_scrape(current_year)
+    raw_records = await run_clerk_scrape(cutoff)
     log.info("Raw records from clerk: %d", len(raw_records))
 
-    # Parcel lookups now run concurrently — ~20x faster than serial
+    # Pass 1: batched Socrata IN() queries; Pass 2: concurrent ArcGIS fallback
     records = await assemble_records_async(raw_records, today)
-    save_output(records, current_year)
+    save_output(records, cutoff)
     export_ghl_csv(records)
 
     log.info("Complete. %d records, %d with address.",
