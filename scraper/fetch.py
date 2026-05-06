@@ -31,7 +31,7 @@ logging.basicConfig(
 log = logging.getLogger("collin_scraper")
 
 CLERK_BASE     = "https://collin.tx.publicsearch.us"
-LOOKBACK_DAYS  = 7   # pull records filed within this many days
+LOOKBACK_DAYS  = 30   # pull records filed within this many days
 RETRY_ATTEMPTS = 3
 RETRY_DELAY    = 5
 DEBUG          = True
