@@ -657,10 +657,12 @@ async def run_clerk_scrape(cutoff: datetime) -> list[dict]:
                          page_num, len(recs), all_old, len(all_records))
                 all_records.extend(recs)
 
-                # Site sorts oldest-first within the year filter, so we cannot
-                # stop early based on date — just paginate all pages and let
-                # _parse_table filter to the cutoff window.
-                _ = all_old  # not used for early exit
+                # Site sorts oldest-first. Pages before the window are all_old=True,
+                # then we hit matching records, then all_old=True again once we pass
+                # the cutoff. Stop as soon as we see all_old after having found records.
+                if all_old and len(all_records) > 0:
+                    log.info("Past the cutoff window after page %d — done", page_num)
+                    break
 
                 if not await _click_next(page):
                     log.info("No more pages after page %d", page_num)
