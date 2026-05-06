@@ -31,7 +31,7 @@ logging.basicConfig(
 log = logging.getLogger("collin_scraper")
 
 CLERK_BASE     = "https://collin.tx.publicsearch.us"
-LOOKBACK_DAYS  = 30   # pull records filed within this many days
+LOOKBACK_DAYS  = 7   # pull records filed within this many days
 RETRY_ATTEMPTS = 3
 RETRY_DELAY    = 5
 DEBUG          = True
@@ -471,10 +471,20 @@ def _parse_table(html: str, cutoff: datetime) -> tuple[list[dict], bool]:
         if not raw_date:
             continue
 
-        try:
-            rec_date = datetime.strptime(raw_date, "%m/%d/%Y")
-        except ValueError:
-            continue
+        rec_date = None
+        for fmt in ("%m/%d/%Y", "%-m/%-d/%Y", "%m/%d/%Y", "%#m/%#d/%Y"):
+            try:
+                rec_date = datetime.strptime(raw_date, fmt)
+                break
+            except ValueError:
+                continue
+        if rec_date is None:
+            # Try splitting manually to handle any combo of padding
+            try:
+                parts = raw_date.split("/")
+                rec_date = datetime(int(parts[2]), int(parts[0]), int(parts[1]))
+            except Exception:
+                continue
 
         if rec_date < cutoff:
             # Older than our lookback window — skip but keep all_old=True
@@ -647,13 +657,10 @@ async def run_clerk_scrape(cutoff: datetime) -> list[dict]:
                          page_num, len(recs), all_old, len(all_records))
                 all_records.extend(recs)
 
-                if all_old and page_num > 1:
-                    # Every record on this page is older than the cutoff window.
-                    # Since the site sorts newest-first and the year filter is on,
-                    # there's nothing more recent further back — stop now.
-                    log.info("All records on page %d are older than cutoff — done",
-                             page_num)
-                    break
+                # Site sorts oldest-first within the year filter, so we cannot
+                # stop early based on date — just paginate all pages and let
+                # _parse_table filter to the cutoff window.
+                _ = all_old  # not used for early exit
 
                 if not await _click_next(page):
                     log.info("No more pages after page %d", page_num)
