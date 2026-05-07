@@ -465,14 +465,37 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
 
 async def _click_next(page: Page) -> bool:
     try:
+        # Try Playwright locator first
         btn = page.locator("button[aria-label='next page']").first
         if await btn.count() > 0:
             disabled = await btn.get_attribute("disabled")
-            if disabled is None:
+            aria_disabled = await btn.get_attribute("aria-disabled")
+            if disabled is None and aria_disabled != "true":
                 await btn.click()
                 await page.wait_for_load_state("networkidle", timeout=10_000)
                 await wait_for_table(page, timeout=15_000)
                 return True
+            else:
+                log.info("  Next button is disabled — last page reached")
+                return False
+    except Exception:
+        pass
+    # Fallback: JS click
+    try:
+        clicked = await page.evaluate("""
+            (() => {
+                const btn = document.querySelector("button[aria-label='next page']");
+                if (btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true') {
+                    btn.click();
+                    return true;
+                }
+                return false;
+            })()
+        """)
+        if clicked:
+            await page.wait_for_load_state("networkidle", timeout=10_000)
+            await wait_for_table(page, timeout=15_000)
+            return True
     except Exception:
         pass
     return False
@@ -498,20 +521,40 @@ async def _apply_year_filter(page: Page, year: int) -> None:
                 log.warning("  Table did not appear after year filter — sleeping 5s")
                 await asyncio.sleep(5)
 
-            # Sort by Recorded Date DESCENDING so newest records appear first.
-            # Without this the portal shows Jan 2026 on page 1 and we'd need
-            # ~1,100 pages to reach the last 7 days.
-            # Click once = ascending, click twice = descending.
+            # Sort by Recorded Date DESCENDING via JavaScript
+            # (Playwright click times out because the header is not yet
+            # interactive right after the year filter re-render)
             try:
-                date_hdr = page.locator("th[aria-label='Recorded Date, activate to sort']").first
-                if await date_hdr.count() > 0:
-                    await date_hdr.click(timeout=10_000)
+                await asyncio.sleep(2)  # Let React settle after year filter
+                sorted_ok = await page.evaluate("""
+                    (() => {
+                        const ths = document.querySelectorAll('th');
+                        for (const th of ths) {
+                            if (th.textContent.trim() === 'Recorded Date') {
+                                th.click();
+                                return true;
+                            }
+                        }
+                        return false;
+                    })()
+                """)
+                if sorted_ok:
                     await wait_for_table(page, timeout=10_000)
-                    await date_hdr.click(timeout=10_000)
+                    # Click again for descending order
+                    await page.evaluate("""
+                        (() => {
+                            const ths = document.querySelectorAll('th');
+                            for (const th of ths) {
+                                if (th.textContent.trim() === 'Recorded Date') {
+                                    th.click();
+                                }
+                            }
+                        })()
+                    """)
                     await wait_for_table(page, timeout=10_000)
-                    log.info("  Sorted by Recorded Date descending")
+                    log.info("  Sorted by Recorded Date descending via JS")
                 else:
-                    log.warning("  Recorded Date sort header not found")
+                    log.warning("  Recorded Date header not found for sort")
             except Exception as sort_exc:
                 log.warning("  Sort error: %s", sort_exc)
         else:
