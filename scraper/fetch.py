@@ -465,8 +465,29 @@ async def _click_next(page: Page) -> bool:
     return False
 
 async def _apply_year_filter(page: Page, year: int) -> None:
-    """Apply year filter — kept for compatibility but skipped in 7-day mode."""
-    pass
+    """
+    Click the year checkbox so the portal shows current-year records first.
+    Required even in 7-day mode — without it the portal defaults to oldest
+    records (1900s) and the date filter stops pagination immediately.
+    """
+    try:
+        clicked = await page.evaluate(f"""
+            (() => {{
+                const cb = document.getElementById('recordedYears_{year}');
+                if (cb) {{ cb.click(); return true; }}
+                return false;
+            }})()
+        """)
+        if clicked:
+            log.info("  Year %d filter applied", year)
+            table_appeared = await wait_for_table(page, timeout=20_000)
+            if not table_appeared:
+                log.warning("  Table did not appear after year filter — sleeping 5s")
+                await asyncio.sleep(5)
+        else:
+            log.warning("  Year %d checkbox not found in DOM", year)
+    except Exception as exc:
+        log.warning("  Year filter error: %s", exc)
 
 async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]:
     all_records: list[dict] = []
@@ -548,7 +569,7 @@ async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]
             return all_records
 
         try:
-            # 7-day mode: no year filter needed
+            await _apply_year_filter(page, date_to.year)
             await screenshot(page, "after_filter")
             await save_html(page, "after_filter")
 
