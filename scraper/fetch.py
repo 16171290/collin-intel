@@ -31,7 +31,7 @@ logging.basicConfig(
 log = logging.getLogger("collin_scraper")
 
 CLERK_BASE     = "https://collin.tx.publicsearch.us"
-CURRENT_YEAR   = datetime.now().year
+LOOKBACK_DAYS  = 7
 RETRY_ATTEMPTS = 3
 RETRY_DELAY    = 5
 DEBUG          = True
@@ -380,7 +380,7 @@ def build_search_url(term: str) -> str:
         f"&searchTerm={term}"
     )
 
-def _parse_table(html: str, current_year: int) -> tuple[list[dict], bool]:
+def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[list[dict], bool]:
     soup = BeautifulSoup(html, "lxml")
     records = []
     all_old = True
@@ -420,7 +420,10 @@ def _parse_table(html: str, current_year: int) -> tuple[list[dict], bool]:
         except ValueError:
             continue
 
-        if rec_date.year != current_year:
+        if rec_date < date_from:
+            all_old = True
+            continue
+        elif rec_date > date_to:
             continue
 
         all_old = False
@@ -462,26 +465,10 @@ async def _click_next(page: Page) -> bool:
     return False
 
 async def _apply_year_filter(page: Page, year: int) -> None:
-    try:
-        clicked = await page.evaluate(f"""
-            (() => {{
-                const cb = document.getElementById('recordedYears_{year}');
-                if (cb) {{ cb.click(); return true; }}
-                return false;
-            }})()
-        """)
-        if clicked:
-            log.info("  Year %d filter applied", year)
-            table_appeared = await wait_for_table(page, timeout=20_000)
-            if not table_appeared:
-                log.warning("  Table did not appear after year filter — sleeping 5s")
-                await asyncio.sleep(5)
-        else:
-            log.warning("  Year %d checkbox not found in DOM", year)
-    except Exception as exc:
-        log.warning("  Year filter error: %s", exc)
+    """Apply year filter — kept for compatibility but skipped in 7-day mode."""
+    pass
 
-async def run_clerk_scrape(current_year: int) -> list[dict]:
+async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]:
     all_records: list[dict] = []
     search_terms = ["RELLP", "JUD", "CCJ", "LNHOA", "NOC", "PRO",
                     "LN", "LNMECH", "LNIRS", "LNFED",
@@ -561,7 +548,7 @@ async def run_clerk_scrape(current_year: int) -> list[dict]:
             return all_records
 
         try:
-            await _apply_year_filter(page, current_year)
+            # 7-day mode: no year filter needed
             await screenshot(page, "after_filter")
             await save_html(page, "after_filter")
 
@@ -575,7 +562,7 @@ async def run_clerk_scrape(current_year: int) -> list[dict]:
                     log.warning("Page %d: table not found after wait", page_num)
 
                 html = await page.content()
-                recs, all_old = _parse_table(html, current_year)
+                recs, all_old = _parse_table(html, date_from, date_to)
                 log.info("Page %d: %d records (all_old=%s) | total so far: %d",
                          page_num, len(recs), all_old, len(all_records))
                 all_records.extend(recs)
@@ -713,11 +700,11 @@ def assemble_records(raw_records: list[dict], today: datetime) -> list[dict]:
     return assembled
 
 
-def save_output(records: list[dict], current_year: int) -> None:
+def save_output(records: list[dict], date_from: str, date_to: str) -> None:
     payload = {
         "fetched_at":   datetime.now(timezone.utc).isoformat(),
         "source":       "Collin County Clerk / Collin CAD",
-        "date_range":   {"from": f"1/1/{current_year}", "to": "present"},
+        "date_range":   {"from": date_from, "to": date_to},
         "total":        len(records),
         "with_address": sum(1 for r in records if r.get("prop_address")),
         "records":      records,
@@ -778,19 +765,22 @@ def export_ghl_csv(records: list[dict]) -> None:
 # ==============================================================================
 
 async def main() -> None:
-    today = datetime.now()
-    current_year = today.year
+    today     = datetime.now()
+    start     = today - timedelta(days=LOOKBACK_DAYS)
+    fmt       = "%-m/%-d/%Y" if sys.platform != "win32" else "%#m/%#d/%Y"
+    date_from = start.strftime(fmt)
+    date_to   = today.strftime(fmt)
 
     log.info("=" * 60)
     log.info("Collin County Motivated Seller Scraper")
-    log.info("Pulling all records for year: %d", current_year)
+    log.info("Range: %s -> %s", date_from, date_to)
     log.info("=" * 60)
 
-    raw_records = await run_clerk_scrape(current_year)
+    raw_records = await run_clerk_scrape(start, today)
     log.info("Raw records from clerk: %d", len(raw_records))
 
     records = assemble_records(raw_records, today)
-    save_output(records, current_year)
+    save_output(records, date_from, date_to)
     export_ghl_csv(records)
 
     log.info("Complete. %d records, %d with address.",
