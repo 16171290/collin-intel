@@ -392,6 +392,19 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
     headers = [th.get_text(" ", strip=True).lower()
                for th in table.find_all("th")]
 
+    # Log first few dates seen for diagnostics
+    sample_dates = []
+    for tr in table.find_all("tr")[1:6]:
+        cells = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
+        if cells and len(cells) > 0:
+            row_tmp = dict(zip(headers, cells))
+            d = row_tmp.get("recorded date", "")
+            if d:
+                sample_dates.append(d)
+    if sample_dates:
+        log.info("  Sample dates on page: %s | looking for %s to %s",
+                 sample_dates, date_from.strftime("%m/%d/%Y"), date_to.strftime("%m/%d/%Y"))
+
     for tr in table.find_all("tr")[1:]:
         cells = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
         if not cells:
@@ -484,6 +497,23 @@ async def _apply_year_filter(page: Page, year: int) -> None:
             if not table_appeared:
                 log.warning("  Table did not appear after year filter — sleeping 5s")
                 await asyncio.sleep(5)
+
+            # Sort by Recorded Date DESCENDING so newest records appear first.
+            # Without this the portal shows Jan 2026 on page 1 and we'd need
+            # ~1,100 pages to reach the last 7 days.
+            # Click once = ascending, click twice = descending.
+            try:
+                date_hdr = page.locator("th[aria-label='Recorded Date, activate to sort']").first
+                if await date_hdr.count() > 0:
+                    await date_hdr.click(timeout=10_000)
+                    await wait_for_table(page, timeout=10_000)
+                    await date_hdr.click(timeout=10_000)
+                    await wait_for_table(page, timeout=10_000)
+                    log.info("  Sorted by Recorded Date descending")
+                else:
+                    log.warning("  Recorded Date sort header not found")
+            except Exception as sort_exc:
+                log.warning("  Sort error: %s", sort_exc)
         else:
             log.warning("  Year %d checkbox not found in DOM", year)
     except Exception as exc:
