@@ -2,7 +2,7 @@
 """
 Collin County, Texas — Motivated Seller Lead Scraper
 Clerk portal : https://collin.tx.publicsearch.us/
-Parcel data  : Texas Open Data Socrata ahis-pci3
+Parcel data  : Local CCAD index (primary) + Texas Open Data Socrata + Allen ArcGIS (fallbacks)
 Pull all records for current year
 """
 
@@ -29,6 +29,24 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 log = logging.getLogger("collin_scraper")
+
+# Make the scraper/ directory importable so parcel_index.py resolves
+# whether this is run as `python fetch.py` from scraper/ or as
+# `python scraper/fetch.py` from the repo root.
+_SCRAPER_DIR = Path(__file__).resolve().parent
+if str(_SCRAPER_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRAPER_DIR))
+
+try:
+    from parcel_index import lookup_parcel_local, load_index as _load_local_index
+    _LOCAL_INDEX = True
+    log.info("Local CCAD parcel index module loaded")
+except ImportError as _e:
+    log.warning("parcel_index.py not found — local CAD index disabled (%s)", _e)
+    _LOCAL_INDEX = False
+    def lookup_parcel_local(name: str) -> dict: return {}
+    def _load_local_index() -> None: pass
+
 
 CLERK_BASE     = "https://collin.tx.publicsearch.us"
 LOOKBACK_DAYS  = 7
@@ -250,9 +268,13 @@ _NON_HOMEOWNER_RE = re.compile(
     r"\bTEXAS\s+WORKFORCE\s+COMMISSION\b|\bCOLLIN\s+COUNTY\b|"
     r"\bCITY\s+OF\s+\w+|\bCOUNTY\s+OF\s+\w+|"
     r"\bMUNICIPAL\s+(WATER|UTILITY)\s+DISTRICT\b|\bISD\b|"
-    # HOAs / community associations (plaintiffs in HOA lien LPs)
+    # HOAs / community associations
     r"\b(COMMUNITY\s+)?(ASSOCIATION|ASS?N|ASSOC|HOMEOWNERS)\b|"
-    # Mortgage servicers / lenders (plaintiffs in foreclosure LPs)
+    # Development-named corporate entities ("TRAILS AT RIVERSTONE COMMUNITY INC")
+    r"\b(COMMUNITY|VILLAGE|RANCH|ESTATES|TRAILS|GARDENS|HEIGHTS|RIDGE|"
+    r"PARK|MEADOWS|PRESERVE|CROSSING|LANDING|HARBOR|POINTE?)"
+    r"\b[^,]{0,40}\b(INC|LLC|CORP|LTD|CO)\b|"
+    # Lenders / servicers / banks
     r"\b(MORTGAGE|SERVICING|BANK|FINANCIAL|CREDIT\s+UNION)\b|"
     # Subdivision / development labels
     r"\b(ADDITION|SUBDIVISION|PHASE)\b|"
@@ -310,6 +332,12 @@ def pick_homeowner_name(cat: str, owner: str, grantee: str) -> str:
 
 # ==============================================================================
 #  PARCEL LOOKUP
+#
+#  Resolution order:
+#    1) Local CCAD index (parcel_index.py)        — primary
+#    2) Socrata `ahis-pci3` / `nne4-8riu`         — fallback
+#    3) Allen GIS ArcGIS service                  — fallback
+#    4) Socrata fuzzy (substring) match           — last resort
 # ==============================================================================
 
 _parcel_cache: dict[str, dict] = {}
@@ -444,32 +472,51 @@ def _arcgis_lookup(owner_variant: str) -> dict:
 def lookup_parcel(owner: str) -> dict:
     """
     Resolve a (cleaned) homeowner name to a parcel record.
-    Expects the caller to have already passed the result of
-    pick_homeowner_name() — this function does not re-clean.
+
+    Pipeline: local index -> Socrata exact -> ArcGIS exact -> Socrata fuzzy.
+    Caller must have already passed the result of pick_homeowner_name() —
+    this function does not re-clean.
     """
     if not owner:
         return {}
     cache_key = owner.strip().upper()
     if cache_key in _parcel_cache:
         return _parcel_cache[cache_key]
+
+    # 1) Primary: local CCAD index. Fast, complete for Collin County,
+    #    and returns extra fields (year_built, long_term_owner, sqft, etc.).
+    if _LOCAL_INDEX:
+        try:
+            result = lookup_parcel_local(owner)
+            if result.get("prop_address") or result.get("mail_address"):
+                _parcel_cache[cache_key] = result
+                return result
+        except Exception as exc:
+            log.warning("Local index lookup failed for %r: %s", owner[:40], exc)
+
+    # 2) Fallback: Socrata exact match (statewide CAD feed)
     result: dict = {}
     for variant in name_variants(owner):
         result = _socrata_lookup(variant)
         if result.get("prop_address") or result.get("mail_address"):
             _parcel_cache[cache_key] = result
             return result
+
+    # 3) Fallback: Allen ArcGIS (Collin parcels published by City of Allen)
     for variant in name_variants(owner):
         result = _arcgis_lookup(variant)
         if result.get("prop_address") or result.get("mail_address"):
             _parcel_cache[cache_key] = result
             return result
-    # Fuzzy gate bumped to 4 tokens to cover names like
-    # 'PATLOLLA PRAVEEN KUMAR REDDY' after estate-noise stripping.
+
+    # 4) Last resort: Socrata fuzzy substring match.
+    #    Gate at 4 tokens so names like 'PATLOLLA PRAVEEN KUMAR REDDY' qualify.
     if len(owner.split()) <= 4:
         result = _socrata_fuzzy(owner.strip().upper())
         if result.get("prop_address") or result.get("mail_address"):
             _parcel_cache[cache_key] = result
             return result
+
     _parcel_cache[cache_key] = {}
     return {}
 
@@ -811,6 +858,15 @@ def compute_flags(rec: dict, today: datetime) -> list[str]:
             flags.append("New this week")
     except ValueError:
         pass
+    # Local-index-derived flag. Long-term-owner status is intentionally
+    # NOT flagged in collin-intel — every property with an adverse filing
+    # is in scope regardless of ownership tenure.
+    yb = rec.get("year_built", "")
+    try:
+        if yb and int(yb) < 2000:
+            flags.append("Pre-2000 build")
+    except ValueError:
+        pass
     if rec.get("not_actionable"):
         flags.append("Not actionable")
     seen: set[str] = set()
@@ -819,7 +875,7 @@ def compute_flags(rec: dict, today: datetime) -> list[str]:
 def compute_score(rec: dict, flags: list[str]) -> int:
     # Non-actionable records (gov filer with no real defendant, placeholder
     # grantee, subdivision name, etc.) get a hard cap so they sink to the
-    # bottom of the dashboard rather than wasting eyeballs at the top.
+    # bottom of the dashboard.
     if rec.get("not_actionable"):
         return 5
 
@@ -827,6 +883,9 @@ def compute_score(rec: dict, flags: list[str]) -> int:
     score += min(len(flags), 4) * 10
     if "Lis pendens" in flags and "Pre-foreclosure" in flags:
         score += 20
+    # Thesis-fit bonus (independent of the 4-flag cap)
+    if "Pre-2000 build" in flags:
+        score += 5
     amount_raw = rec.get("_amount_raw")
     if amount_raw:
         try:
@@ -844,6 +903,14 @@ def compute_score(rec: dict, flags: list[str]) -> int:
 # ==============================================================================
 
 def assemble_records(raw_records: list[dict], today: datetime) -> list[dict]:
+    # Pre-load the local index so the first lookup doesn't pay the build cost
+    # mid-loop (and so any load failure is logged once, up front).
+    if _LOCAL_INDEX:
+        try:
+            _load_local_index()
+        except Exception as exc:
+            log.warning("Could not preload parcel index: %s", exc)
+
     assembled: list[dict] = []
     seen: set = set()
     total = len(raw_records)
@@ -899,6 +966,12 @@ def assemble_records(raw_records: list[dict], today: datetime) -> list[dict]:
                 "mail_city":       parcel.get("mail_city", ""),
                 "mail_state":      parcel.get("mail_state", "TX"),
                 "mail_zip":        parcel.get("mail_zip", ""),
+                # New: investment-screening signals from the local CAD index
+                "year_built":      parcel.get("year_built", ""),
+                "sqft":            parcel.get("sqft", ""),
+                "market_value":    parcel.get("market_value", ""),
+                "deed_year":       parcel.get("deed_year", ""),
+                "long_term_owner": parcel.get("long_term_owner", False),
                 "clerk_url":       safe_str(raw.get("clerk_url", "")),
             }
             flags = compute_flags(rec, today)
@@ -910,10 +983,11 @@ def assemble_records(raw_records: list[dict], today: datetime) -> list[dict]:
             log.warning("Skipping bad record: %s", exc)
 
     assembled.sort(key=lambda r: r["score"], reverse=True)
-    with_addr = sum(1 for r in assembled if r.get("prop_address"))
+    with_addr  = sum(1 for r in assembled if r.get("prop_address"))
     actionable = sum(1 for r in assembled if not r.get("not_actionable"))
-    log.info("Assembled %d records (%d actionable, %d with address)",
-             len(assembled), actionable, with_addr)
+    long_term  = sum(1 for r in assembled if r.get("long_term_owner"))
+    log.info("Assembled %d records (%d actionable, %d with address, %d long-term owners)",
+             len(assembled), actionable, with_addr, long_term)
     return assembled
 
 
@@ -925,6 +999,7 @@ def save_output(records: list[dict], date_from: str, date_to: str) -> None:
         "total":        len(records),
         "actionable":   sum(1 for r in records if not r.get("not_actionable")),
         "with_address": sum(1 for r in records if r.get("prop_address")),
+        "long_term":    sum(1 for r in records if r.get("long_term_owner")),
         "records":      records,
     }
     for path in [DASHBOARD_DIR / "records.json", DATA_DIR / "records.json"]:
@@ -938,6 +1013,7 @@ def export_ghl_csv(records: list[dict]) -> None:
         "First Name", "Last Name",
         "Mailing Address", "Mailing City", "Mailing State", "Mailing Zip",
         "Property Address", "Property City", "Property State", "Property Zip",
+        "Year Built", "SqFt", "Market Value", "Deed Year", "Long-term Owner",
         "Lead Type", "Document Type", "Date Filed", "Document Number",
         "Amount/Debt Owed", "Seller Score", "Motivated Seller Flags",
         "Source", "Public Records URL",
@@ -970,6 +1046,11 @@ def export_ghl_csv(records: list[dict]) -> None:
                 "Property City":          r.get("prop_city", ""),
                 "Property State":         r.get("prop_state", "TX"),
                 "Property Zip":           r.get("prop_zip", ""),
+                "Year Built":             r.get("year_built", ""),
+                "SqFt":                   r.get("sqft", ""),
+                "Market Value":           r.get("market_value", ""),
+                "Deed Year":              r.get("deed_year", ""),
+                "Long-term Owner":        "YES" if r.get("long_term_owner") else "",
                 "Lead Type":              r.get("cat", ""),
                 "Document Type":          r.get("cat_label", ""),
                 "Date Filed":             r.get("filed", ""),
