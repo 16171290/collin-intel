@@ -214,6 +214,101 @@ async def wait_for_table(page: Page, timeout: int = 20_000) -> bool:
 
 
 # ==============================================================================
+#  OWNER NORMALIZATION & GRANTOR CLASSIFICATION
+#  Decides which party in a clerk record is the actual homeowner.
+# ==============================================================================
+
+# Decedent / AKA / DBA noise tokens that pollute clerk owner strings.
+_ESTATE_NOISE = re.compile(
+    r"\b("
+    r"DECEASED\s+ESTATE|ESTATE\s+OF|EST\s+OF|"
+    r"DECEASED|DECD|DEC'?D|"
+    r"HEIRS\s+(AT\s+LAW\s+)?OF|"
+    r"DBA|D/B/A|AKA|A/K/A"
+    r")\b",
+    re.IGNORECASE,
+)
+
+def clean_owner(name: str) -> str:
+    """Strip decedent / estate / AKA / DBA noise so the remainder is a real
+    parcel-owner name that has a chance of matching CAD data."""
+    if not name:
+        return ""
+    s = _ESTATE_NOISE.sub(" ", name)
+    s = re.sub(r"[,;]", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s.upper()
+
+
+# Patterns that signal a name is NOT a homeowner — it's a plaintiff,
+# filer, lender, government entity, HOA, subdivision label, or placeholder.
+_NON_HOMEOWNER_RE = re.compile(
+    # Government
+    r"\bSTATE\s+OF\s+TEXAS\b|\bTEXAS\s+STATE\s+OF\b|"
+    r"\bUNITED\s+STATES\s+OF\s+AMERICA\b|\bINTERNAL\s+REVENUE\s+SERVICE\b|"
+    r"\bU\.?S\.?\s+TREASURY\b|\bTEXAS\s+COMPTROLLER\b|"
+    r"\bTEXAS\s+WORKFORCE\s+COMMISSION\b|\bCOLLIN\s+COUNTY\b|"
+    r"\bCITY\s+OF\s+\w+|\bCOUNTY\s+OF\s+\w+|"
+    r"\bMUNICIPAL\s+(WATER|UTILITY)\s+DISTRICT\b|\bISD\b|"
+    # HOAs / community associations (plaintiffs in HOA lien LPs)
+    r"\b(COMMUNITY\s+)?(ASSOCIATION|ASS?N|ASSOC|HOMEOWNERS)\b|"
+    # Mortgage servicers / lenders (plaintiffs in foreclosure LPs)
+    r"\b(MORTGAGE|SERVICING|BANK|FINANCIAL|CREDIT\s+UNION)\b|"
+    # Subdivision / development labels
+    r"\b(ADDITION|SUBDIVISION|PHASE)\b|"
+    # Placeholders
+    r"^\s*PUBLIC\s*$",
+    re.IGNORECASE,
+)
+
+def is_non_homeowner(name: str) -> bool:
+    """True when the name is almost certainly a plaintiff / filer / entity /
+    placeholder, not an actual property owner."""
+    if not name:
+        return True
+    if len(name.split()) < 2:           # 'PUBLIC', 'INSPIRATION', etc.
+        return True
+    return bool(_NON_HOMEOWNER_RE.search(name))
+
+
+# Doc-type categories where the clerk indexes the FILER as grantor and the
+# actual property owner as grantee.
+GRANTEE_AS_HOMEOWNER_CATS = {
+    "LP", "LNHOA", "LNMECH", "LNCORPTX", "LNFED", "LNIRS",
+    "JUD", "CCJ", "DRJUD", "MEDLN", "NOFC",
+}
+
+def pick_homeowner_name(cat: str, owner: str, grantee: str) -> str:
+    """
+    Return the cleaned name most likely to match a CAD parcel owner.
+
+    - PRO: decedent's name is in the grantor field (after stripping noise)
+    - Lien/judgment cats: if grantor looks like a plaintiff/filer, use grantee
+    - Default: use grantor
+    Returns empty string when neither field yields a usable name (caller
+    should treat as not_actionable).
+    """
+    owner_clean   = clean_owner(owner)
+    grantee_clean = clean_owner(grantee)
+
+    if cat == "PRO":
+        return owner_clean
+
+    if cat in GRANTEE_AS_HOMEOWNER_CATS and is_non_homeowner(owner_clean):
+        if grantee_clean and not is_non_homeowner(grantee_clean):
+            return grantee_clean
+
+    if not is_non_homeowner(owner_clean):
+        return owner_clean
+
+    # Last-ditch fallback: usable grantee even when grantor looked OK
+    if grantee_clean and not is_non_homeowner(grantee_clean):
+        return grantee_clean
+
+    return ""
+
+
+# ==============================================================================
 #  PARCEL LOOKUP
 # ==============================================================================
 
@@ -347,6 +442,11 @@ def _arcgis_lookup(owner_variant: str) -> dict:
         return {}
 
 def lookup_parcel(owner: str) -> dict:
+    """
+    Resolve a (cleaned) homeowner name to a parcel record.
+    Expects the caller to have already passed the result of
+    pick_homeowner_name() — this function does not re-clean.
+    """
     if not owner:
         return {}
     cache_key = owner.strip().upper()
@@ -363,10 +463,15 @@ def lookup_parcel(owner: str) -> dict:
         if result.get("prop_address") or result.get("mail_address"):
             _parcel_cache[cache_key] = result
             return result
-    if len(owner.split()) <= 3:
+    # Fuzzy gate bumped to 4 tokens to cover names like
+    # 'PATLOLLA PRAVEEN KUMAR REDDY' after estate-noise stripping.
+    if len(owner.split()) <= 4:
         result = _socrata_fuzzy(owner.strip().upper())
-    _parcel_cache[cache_key] = result
-    return result
+        if result.get("prop_address") or result.get("mail_address"):
+            _parcel_cache[cache_key] = result
+            return result
+    _parcel_cache[cache_key] = {}
+    return {}
 
 
 # ==============================================================================
@@ -706,10 +811,18 @@ def compute_flags(rec: dict, today: datetime) -> list[str]:
             flags.append("New this week")
     except ValueError:
         pass
+    if rec.get("not_actionable"):
+        flags.append("Not actionable")
     seen: set[str] = set()
     return [f for f in flags if not (f in seen or seen.add(f))]
 
 def compute_score(rec: dict, flags: list[str]) -> int:
+    # Non-actionable records (gov filer with no real defendant, placeholder
+    # grantee, subdivision name, etc.) get a hard cap so they sink to the
+    # bottom of the dashboard rather than wasting eyeballs at the top.
+    if rec.get("not_actionable"):
+        return 5
+
     score = 30
     score += min(len(flags), 4) * 10
     if "Lis pendens" in flags and "Pre-foreclosure" in flags:
@@ -739,6 +852,7 @@ def assemble_records(raw_records: list[dict], today: datetime) -> list[dict]:
         try:
             doc_num = safe_str(raw.get("doc_num", ""))
             owner   = safe_str(raw.get("owner", ""))
+            grantee = safe_str(raw.get("grantee", ""))
             filed   = safe_str(raw.get("filed", ""))
             cat     = safe_str(raw.get("cat", ""))
 
@@ -754,31 +868,38 @@ def assemble_records(raw_records: list[dict], today: datetime) -> list[dict]:
             amount_str = safe_str(raw.get("amount", ""))
             amount_raw = parse_amount(amount_str)
 
+            # Decide which party is the homeowner before doing any I/O.
+            homeowner_name = pick_homeowner_name(cat, owner, grantee)
+            not_actionable = not homeowner_name
+
             if i % 100 == 0:
                 log.info("  Parcel lookup %d/%d (cache: %d)",
                          i, total, len(_parcel_cache))
-            parcel = lookup_parcel(owner)
+
+            parcel = {} if not_actionable else lookup_parcel(homeowner_name)
 
             rec: dict = {
-                "doc_num":      doc_num,
-                "doc_type":     safe_str(raw.get("doc_type", "")),
-                "filed":        filed,
-                "cat":          cat,
-                "cat_label":    safe_str(raw.get("cat_label", "")),
-                "owner":        owner,
-                "grantee":      safe_str(raw.get("grantee", "")),
-                "amount":       amount_str,
-                "_amount_raw":  amount_raw,
-                "legal":        safe_str(raw.get("legal", "")),
-                "prop_address": parcel.get("prop_address", ""),
-                "prop_city":    parcel.get("prop_city", ""),
-                "prop_state":   parcel.get("prop_state", "TX"),
-                "prop_zip":     parcel.get("prop_zip", ""),
-                "mail_address": parcel.get("mail_address", ""),
-                "mail_city":    parcel.get("mail_city", ""),
-                "mail_state":   parcel.get("mail_state", "TX"),
-                "mail_zip":     parcel.get("mail_zip", ""),
-                "clerk_url":    safe_str(raw.get("clerk_url", "")),
+                "doc_num":         doc_num,
+                "doc_type":        safe_str(raw.get("doc_type", "")),
+                "filed":           filed,
+                "cat":             cat,
+                "cat_label":       safe_str(raw.get("cat_label", "")),
+                "owner":           owner,
+                "grantee":         grantee,
+                "homeowner_name":  homeowner_name,
+                "not_actionable":  not_actionable,
+                "amount":          amount_str,
+                "_amount_raw":     amount_raw,
+                "legal":           safe_str(raw.get("legal", "")),
+                "prop_address":    parcel.get("prop_address", ""),
+                "prop_city":       parcel.get("prop_city", ""),
+                "prop_state":      parcel.get("prop_state", "TX"),
+                "prop_zip":        parcel.get("prop_zip", ""),
+                "mail_address":    parcel.get("mail_address", ""),
+                "mail_city":       parcel.get("mail_city", ""),
+                "mail_state":      parcel.get("mail_state", "TX"),
+                "mail_zip":        parcel.get("mail_zip", ""),
+                "clerk_url":       safe_str(raw.get("clerk_url", "")),
             }
             flags = compute_flags(rec, today)
             rec["flags"] = flags
@@ -790,7 +911,9 @@ def assemble_records(raw_records: list[dict], today: datetime) -> list[dict]:
 
     assembled.sort(key=lambda r: r["score"], reverse=True)
     with_addr = sum(1 for r in assembled if r.get("prop_address"))
-    log.info("Assembled %d records, %d with address", len(assembled), with_addr)
+    actionable = sum(1 for r in assembled if not r.get("not_actionable"))
+    log.info("Assembled %d records (%d actionable, %d with address)",
+             len(assembled), actionable, with_addr)
     return assembled
 
 
@@ -800,6 +923,7 @@ def save_output(records: list[dict], date_from: str, date_to: str) -> None:
         "source":       "Collin County Clerk / Collin CAD",
         "date_range":   {"from": date_from, "to": date_to},
         "total":        len(records),
+        "actionable":   sum(1 for r in records if not r.get("not_actionable")),
         "with_address": sum(1 for r in records if r.get("prop_address")),
         "records":      records,
     }
@@ -829,7 +953,12 @@ def export_ghl_csv(records: list[dict]) -> None:
         writer = csv.DictWriter(fh, fieldnames=cols)
         writer.writeheader()
         for r in records:
-            first, last = split_name(r.get("owner", ""))
+            # Skip records flagged as not actionable — keeps GHL clean.
+            if r.get("not_actionable"):
+                continue
+            # Use the resolved homeowner_name (falls back to owner if empty).
+            name_for_split = r.get("homeowner_name") or r.get("owner", "")
+            first, last = split_name(name_for_split)
             writer.writerow({
                 "First Name":             first,
                 "Last Name":              last,
