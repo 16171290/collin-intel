@@ -618,13 +618,15 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
         if link:
             clerk_url = _abs_url(link["href"])
         elif doc_num:
-            # The portal generates internal base64 IDs for /doc/ paths that
-            # aren't derivable from the instrument number, but a pre-filtered
-            # search URL reliably lands on the single matching document.
+            # Tyler Tech / Neumo PublicSearch advanced-search URL that filters
+            # to a single instrument number.  The `documentNumberRange` param
+            # takes a URL-encoded JSON array: ["2026000060930"].  Verified
+            # working on the same platform at tarrant.tx.publicsearch.us.
             clerk_url = (
                 f"{CLERK_BASE}/results"
-                f"?searchType=quickSearch&department=RP"
-                f"&searchOcrText=false&searchTerm={doc_num}"
+                f"?department=RP"
+                f"&documentNumberRange=%5B%22{doc_num}%22%5D"
+                f"&searchType=advancedSearch"
             )
         else:
             clerk_url = ""
