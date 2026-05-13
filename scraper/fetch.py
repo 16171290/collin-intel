@@ -543,6 +543,8 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
 
     headers = [th.get_text(" ", strip=True).lower()
                for th in table.find_all("th")]
+    if headers:
+        log.info("  Table columns: %s", headers)
 
     # Log first few dates seen for diagnostics
     sample_dates = []
@@ -577,6 +579,22 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
         doc_type = g("doc type")
         legal    = g("legal description")
 
+        # Amount: try named columns first (consideration, amount, debt, value,
+        # judgment amount, etc.), then fall back to scanning every cell for a
+        # dollar pattern.  Judgments, IRS / state tax liens, and HOA liens
+        # often carry an amount directly in the index.
+        amount = g(
+            "consideration", "amount", "amt", "amount owed",
+            "consideration amount", "judgment amount", "debt amount",
+            "total amount", "value", "lien amount",
+        )
+        if not amount:
+            for cell in cells:
+                m = re.search(r"\$\s?[\d,]+(?:\.\d{2})?", cell)
+                if m and "DOC" not in cell.upper():
+                    amount = m.group(0).strip()
+                    break
+
         if not raw_date:
             continue
 
@@ -600,7 +618,14 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
         if link:
             clerk_url = _abs_url(link["href"])
         elif doc_num:
-            clerk_url = f"{CLERK_BASE}/doc/{doc_num}"
+            # The portal generates internal base64 IDs for /doc/ paths that
+            # aren't derivable from the instrument number, but a pre-filtered
+            # search URL reliably lands on the single matching document.
+            clerk_url = (
+                f"{CLERK_BASE}/results"
+                f"?searchType=quickSearch&department=RP"
+                f"&searchOcrText=false&searchTerm={doc_num}"
+            )
         else:
             clerk_url = ""
         cat, cat_label = _map_doc_type(doc_type)
@@ -614,7 +639,7 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
             "owner":     owner,
             "grantee":   grantee,
             "legal":     legal,
-            "amount":    "",
+            "amount":    amount,
             "clerk_url": clerk_url,
         })
 
