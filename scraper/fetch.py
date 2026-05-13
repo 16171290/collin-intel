@@ -597,7 +597,12 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
             continue
 
         link = tr.find("a", href=True)
-        clerk_url = _abs_url(link["href"]) if link else ""
+        if link:
+            clerk_url = _abs_url(link["href"])
+        elif doc_num:
+            clerk_url = f"{CLERK_BASE}/doc/{doc_num}"
+        else:
+            clerk_url = ""
         cat, cat_label = _map_doc_type(doc_type)
 
         records.append({
