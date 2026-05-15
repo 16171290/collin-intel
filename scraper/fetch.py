@@ -64,7 +64,6 @@ ARCGIS_URL = (
 
 DOC_TYPE_MAP: dict[str, tuple[str, str, list[str]]] = {
     "LP":       ("LP",       "Lis Pendens",             ["Lis pendens", "Pre-foreclosure"]),
-    "RELLP":    ("RELLP",    "Release Lis Pendens",     ["Lis pendens"]),
     "NOFC":     ("NOFC",     "Notice of Foreclosure",   ["Pre-foreclosure"]),
     "TAXDEED":  ("TAXDEED",  "Tax Deed",                ["Tax lien"]),
     "JUD":      ("JUD",      "Judgment",                ["Judgment lien"]),
@@ -78,7 +77,6 @@ DOC_TYPE_MAP: dict[str, tuple[str, str, list[str]]] = {
     "LNHOA":    ("LNHOA",    "HOA Lien",                ["Mechanic lien"]),
     "MEDLN":    ("MEDLN",    "Medicaid Lien",           ["Judgment lien"]),
     "PRO":      ("PRO",      "Probate Document",        ["Probate / estate"]),
-    "NOC":      ("NOC",      "Notice of Commencement",  []),
 }
 
 ROOT          = Path(__file__).resolve().parent.parent
