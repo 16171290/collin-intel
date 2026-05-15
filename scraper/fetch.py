@@ -630,6 +630,11 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
             clerk_url = ""
         cat, cat_label = _map_doc_type(doc_type)
 
+        # Skip unrecognized doc types (DEED, RELEASE, mortgages, etc.)
+        # Only keep records whose mapped cat is in our motivated-seller map.
+        if cat not in DOC_TYPE_MAP:
+            continue
+
         records.append({
             "doc_num":   doc_num,
             "doc_type":  doc_type,
@@ -746,7 +751,7 @@ async def _apply_year_filter(page: Page, year: int) -> None:
 
 async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]:
     all_records: list[dict] = []
-    search_terms = ["RELLP", "JUD", "CCJ", "LNHOA", "NOC", "PRO",
+    search_terms = ["JUD", "CCJ", "LNHOA", "PRO",
                     "LN", "LNMECH", "LNIRS", "LNFED",
                     "LP", "NOFC", "TAXDEED"]
 
@@ -877,11 +882,6 @@ async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]
 
 def compute_flags(rec: dict, today: datetime) -> list[str]:
     flags: list[str] = list(DOC_TYPE_MAP.get(rec.get("cat", ""), ("", "", []))[2])
-    owner_up = rec.get("owner", "").upper()
-    if any(kw in owner_up for kw in
-           ["LLC", "INC", "CORP", "LTD", "L.L.C",
-            "TRUST", "HOLDINGS", "PROPERTIES"]):
-        flags.append("LLC / corp owner")
     try:
         filed_dt = datetime.strptime(rec.get("filed", ""), "%m/%d/%Y")
         if (today - filed_dt).days <= 7:
