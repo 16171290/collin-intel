@@ -10,6 +10,7 @@ slower and statewide-noisy Socrata calls.
 Public API:
     load_index(force=False)        — build/refresh the index (idempotent)
     lookup_parcel_local(name)      — same return shape as fetch.lookup_parcel
+    log_lookup_stats()             — optional: print summary of hits/misses
 
 Returned dict on a hit:
     prop_address, prop_city, prop_state, prop_zip,
@@ -20,6 +21,7 @@ Returned dict on a hit:
 
 from __future__ import annotations
 
+import atexit
 import csv
 import io
 import logging
@@ -45,8 +47,39 @@ SUFFIXES = {
     "MD", "DDS", "ESQ", "PHD",
 }
 
+# Particles that commonly start compound surnames in Texas records.
+# Used at lookup time to try multi-token last-name splits before falling
+# back to the default single-token assumption.
+#
+# Intentionally excludes 'LE' and 'DA' — those are common standalone
+# Vietnamese / Portuguese surnames in Texas and including them would cause
+# more false positives than the rare LeBlanc / DaSilva style names we'd
+# catch.
+COMPOUND_LAST_PARTICLES = {
+    "DE", "DEL", "DELA", "DELOS", "LA", "LAS", "LOS",
+    "VAN", "VANDER", "VANDEN", "VON",
+    "ST", "SAINT", "MAC", "MC",
+}
+
+# Primary index: 'LAST FIRST' / 'LAST FIRST MIDDLE' style multi-char keys
 _index: dict[str, list[dict]] = {}
-_loaded_from: Optional[str]   = None
+
+# Secondary index: 'LAST F' (single-letter first-initial) keys for last-resort
+# fallback lookups.  Only consulted when the primary index returns nothing
+# AND only accepted when the initial key resolves to exactly one record.
+_initial_index: dict[str, list[dict]] = {}
+
+_loaded_from:   Optional[str]         = None
+
+# Diagnostic counters — reset on each load_index() call.  Reported by
+# log_lookup_stats() at end of run for visibility into match quality.
+_lookup_stats = {
+    "total":         0,
+    "hits_primary":  0,
+    "hits_initial":  0,
+    "misses":        0,
+    "miss_examples": [],   # first ~30 miss names for log inspection
+}
 
 
 # ---------------------------------------------------------------------------
@@ -82,6 +115,7 @@ def _keys_for_row(first: str, last: str) -> set[str]:
                       -> {'TAIPALE CURTID', 'TAIPALE CURTID P',
                           'TAIPALE JEANNA', 'TAIPALE JEANNA M', ...}
       - Hyphenated last: 'Smith-Jones'      -> indexes under both halves
+      - Initials-only first: 'R L Smith'    -> {'SMITH R', 'SMITH L', 'SMITH R L'}
       - Suffixes (Jr/Sr/II/Le/etc) stripped before key generation
     """
     last_n  = _normalize(last)
@@ -113,8 +147,79 @@ def _keys_for_row(first: str, last: str) -> set[str]:
         # First two multi-char tokens together (skips initials between)
         if len(multi) >= 2:
             keys.add(f"{ln} {multi[0]} {multi[1]}")
+        # NEW: initials-only first names ('R L Smith') previously generated
+        # zero keys.  Index each token directly so they remain findable.
+        if not multi:
+            for t in f_tokens:
+                if t:
+                    keys.add(f"{ln} {t}")
 
     return keys
+
+
+def _initial_keys_for_row(first: str, last: str) -> set[str]:
+    """
+    Generate 'LAST F' (single-letter first-initial) keys for the fallback
+    initial-index.  These are deliberately ambiguous — they're only consulted
+    at lookup time when the primary index missed AND the initial key resolves
+    to exactly one record (uniqueness check protects against false positives).
+    """
+    last_n  = _normalize(last)
+    first_n = _normalize(first)
+    if not last_n or not first_n:
+        return set()
+
+    last_alts = {last_n}
+    for part in last_n.split("-"):
+        part = part.strip()
+        if part and len(part) >= 2:
+            last_alts.add(part)
+
+    f_tokens = _strip_suffixes(first_n.split())
+    if not f_tokens:
+        return set()
+
+    keys: set[str] = set()
+    for ln in last_alts:
+        for t in f_tokens:
+            if t:
+                keys.add(f"{ln} {t[0]}")
+    return keys
+
+
+# ---------------------------------------------------------------------------
+#  COMPOUND-SURNAME SPLIT (lookup time)
+# ---------------------------------------------------------------------------
+
+def _candidate_last_splits(tokens: list[str]) -> list[tuple[str, list[str]]]:
+    """
+    Produce plausible (last_name, rest_tokens) splits for a normalized name.
+
+    Most-specific splits first so the more-likely-correct match wins:
+      'DE LA CRUZ MARIA'  -> ('DE LA CRUZ', ['MARIA']), ('DE LA', ['CRUZ','MARIA']),
+                              ('DE', ['LA','CRUZ','MARIA'])
+      'VAN DER BERG JOHN' -> ('VAN DER BERG', ['JOHN']) is NOT generated (only
+                              two compound particles deep), but ('VAN DER', ...)
+                              and ('VAN', ...) are.
+      'MC DONALD JOHN'    -> ('MC DONALD', ['JOHN']), ('MC', ['DONALD','JOHN'])
+      'DICKEN ROBERT LEE' -> ('DICKEN', ['ROBERT','LEE'])    (default only)
+    """
+    splits: list[tuple[str, list[str]]] = []
+
+    # 3-token compound (e.g., DE LA CRUZ): tokens[0] AND tokens[1] are particles
+    if (len(tokens) > 3
+            and tokens[0] in COMPOUND_LAST_PARTICLES
+            and tokens[1] in COMPOUND_LAST_PARTICLES):
+        splits.append((" ".join(tokens[:3]), tokens[3:]))
+
+    # 2-token compound (e.g., VAN BERG, MC DONALD, ST PIERRE, DE CRUZ)
+    if len(tokens) > 2 and tokens[0] in COMPOUND_LAST_PARTICLES:
+        splits.append((" ".join(tokens[:2]), tokens[2:]))
+
+    # Default single-token last name (most common case, always tried)
+    splits.append((tokens[0], tokens[1:]))
+
+    return splits
 
 
 # ---------------------------------------------------------------------------
@@ -154,15 +259,17 @@ def _fetch_latest_csv() -> tuple[str, str]:
 
 def load_index(force: bool = False) -> None:
     """Build the in-memory index.  Idempotent unless force=True."""
-    global _index, _loaded_from
+    global _index, _initial_index, _loaded_from
     if _index and not force:
         return
     ds, csv_text = _fetch_latest_csv()
     reader = csv.DictReader(io.StringIO(csv_text))
 
-    new_index: dict[str, list[dict]] = {}
-    n_rows = 0
-    n_keys = 0
+    new_index:         dict[str, list[dict]] = {}
+    new_initial_index: dict[str, list[dict]] = {}
+    n_rows  = 0
+    n_keys  = 0
+    n_ikeys = 0
     for row in reader:
         n_rows += 1
         rec = {
@@ -181,13 +288,28 @@ def load_index(force: bool = False) -> None:
             "long_term_owner":  (row.get("Long Term Owner")  or "").strip().upper() == "YES",
             "account":          (row.get("Account Number")   or "").strip(),
         }
-        for key in _keys_for_row(row.get("First Name", ""), row.get("Last Name", "")):
+        first = row.get("First Name", "")
+        last  = row.get("Last Name",  "")
+        for key in _keys_for_row(first, last):
             new_index.setdefault(key, []).append(rec)
             n_keys += 1
-    _index = new_index
-    _loaded_from = ds
-    log.info("Parcel index ready: %d rows -> %d index entries (%d unique keys)",
-             n_rows, n_keys, len(new_index))
+        for ikey in _initial_keys_for_row(first, last):
+            new_initial_index.setdefault(ikey, []).append(rec)
+            n_ikeys += 1
+
+    _index         = new_index
+    _initial_index = new_initial_index
+    _loaded_from   = ds
+
+    # Reset diagnostic counters for the fresh index
+    _lookup_stats["total"]         = 0
+    _lookup_stats["hits_primary"]  = 0
+    _lookup_stats["hits_initial"]  = 0
+    _lookup_stats["misses"]        = 0
+    _lookup_stats["miss_examples"] = []
+
+    log.info("Parcel index ready: %d rows -> %d primary keys (%d unique), %d initial keys (%d unique)",
+             n_rows, n_keys, len(new_index), n_ikeys, len(new_initial_index))
 
 
 # ---------------------------------------------------------------------------
@@ -213,9 +335,18 @@ def lookup_parcel_local(homeowner_name: str) -> dict:
     the local CAD index.  Returns {} on miss so the caller can fall back to
     other sources (Socrata/ArcGIS).
 
+    Strategy:
+      1. Try every plausible last-name segmentation (compound surnames first,
+         then default single-token) against the primary multi-char index.
+      2. If nothing hits, try the initial-only fallback index — but only
+         accept results that resolve to exactly one record (uniqueness check).
+      3. On any hit, pick the oldest-deed-year parcel via _rank().
+
     Caller should pass a name already cleaned by pick_homeowner_name() —
     this function does NOT strip 'DECEASED ESTATE' etc.
     """
+    _lookup_stats["total"] += 1
+
     if not _index:
         try:
             load_index()
@@ -230,41 +361,106 @@ def lookup_parcel_local(homeowner_name: str) -> dict:
     if len(tokens) < 2:
         return {}
 
-    last = tokens[0]
-    rest = _strip_suffixes(tokens[1:])
-    if not rest:
-        return {}
+    candidate_splits = _candidate_last_splits(tokens)
 
-    # Build the same family of candidate keys we used at index time.
-    candidates: list[str] = [f"{last} {rest[0]}"]
-    if len(rest) >= 2:
-        candidates.append(f"{last} {rest[0]} {rest[1]}")
-    rest_multi = [t for t in rest if len(t) > 1]
-    if rest_multi:
-        candidates.append(f"{last} {rest_multi[0]}")
-        if len(rest_multi) >= 2:
-            candidates.append(f"{last} {rest_multi[0]} {rest_multi[1]}")
-    # Hyphenated-last fallback: try each half
-    if "-" in last:
-        for half in last.split("-"):
-            half = half.strip()
-            if half and len(half) >= 2 and rest:
-                candidates.append(f"{half} {rest[0]}")
+    # ---- Pass 1: primary multi-char index ----------------------------------
+    all_candidates: list[str] = []
+    for last, rest in candidate_splits:
+        rest = _strip_suffixes(rest)
+        if not rest:
+            continue
+        rest_multi = [t for t in rest if len(t) > 1]
+
+        all_candidates.append(f"{last} {rest[0]}")
+        if len(rest) >= 2:
+            all_candidates.append(f"{last} {rest[0]} {rest[1]}")
+        if rest_multi:
+            all_candidates.append(f"{last} {rest_multi[0]}")
+            if len(rest_multi) >= 2:
+                all_candidates.append(f"{last} {rest_multi[0]} {rest_multi[1]}")
+        # Hyphenated-last fallback: try each half
+        if "-" in last:
+            for half in last.split("-"):
+                half = half.strip()
+                if half and len(half) >= 2 and rest:
+                    all_candidates.append(f"{half} {rest[0]}")
 
     seen_accounts: set = set()
     hits: list[dict] = []
-    for key in candidates:
+    for key in all_candidates:
         for rec in _index.get(key, []):
             if rec["account"] in seen_accounts:
                 continue
             seen_accounts.add(rec["account"])
             hits.append(rec)
 
-    if not hits:
-        return {}
+    if hits:
+        _lookup_stats["hits_primary"] += 1
+        hits.sort(key=_rank)
+        return hits[0]
 
-    hits.sort(key=_rank)
-    return hits[0]
+    # ---- Pass 2: initial-only fallback (uniqueness-gated) ------------------
+    # Only accept an initial-key match when it resolves to a single record.
+    # This protects against returning 'DICKEN R' -> some random Richard / Ronald
+    # Dicken when the clerk record was actually about a Robert.
+    for last, rest in candidate_splits:
+        rest = _strip_suffixes(rest)
+        if not rest:
+            continue
+        for t in rest:
+            if not t:
+                continue
+            init_key = f"{last} {t[0]}"
+            initial_matches = _initial_index.get(init_key, [])
+            if len(initial_matches) == 1:
+                _lookup_stats["hits_initial"] += 1
+                return initial_matches[0]
+
+    # ---- Miss ---------------------------------------------------------------
+    _lookup_stats["misses"] += 1
+    if len(_lookup_stats["miss_examples"]) < 30:
+        _lookup_stats["miss_examples"].append(homeowner_name)
+    return {}
+
+
+def log_lookup_stats() -> None:
+    """
+    Emit a summary of parcel-lookup match quality.  Call this from the
+    caller (fetch.py) AFTER all records have been assembled so the numbers
+    reflect a full run.
+    """
+    s = _lookup_stats
+    total = s["total"]
+    if not total:
+        return
+    primary = s["hits_primary"]
+    initial = s["hits_initial"]
+    miss    = s["misses"]
+    log.info(
+        "Parcel-lookup stats: %d total | primary-hit %d (%.1f%%) | "
+        "initial-fallback-hit %d (%.1f%%) | miss %d (%.1f%%)",
+        total,
+        primary, primary / total * 100,
+        initial, initial / total * 100,
+        miss,    miss    / total * 100,
+    )
+    if s["miss_examples"]:
+        log.info("Sample misses (first %d) — paste these to Claude to target the next round of fixes:",
+                 len(s["miss_examples"]))
+        for name in s["miss_examples"]:
+            log.info("  miss: %s", name)
+
+
+# Print stats automatically on interpreter shutdown so no fetch.py edit is
+# needed.  The total>0 gate keeps CLI imports / unit tests quiet.
+def _log_stats_at_exit() -> None:
+    if _lookup_stats["total"] > 0:
+        try:
+            log_lookup_stats()
+        except Exception:
+            pass
+
+atexit.register(_log_stats_at_exit)
 
 
 # ---------------------------------------------------------------------------
@@ -280,6 +476,9 @@ if __name__ == "__main__":
         "SMITH STEPHANIE LORRAINE",
         "WILSON ROBERT E",
         "TAIPALE CURTID",
+        "DE LA CRUZ MARIA",
+        "VAN DER BERG JOHN",
+        "MC DONALD ROBERT",
     ]
     for q in queries:
         r = lookup_parcel_local(q)
@@ -287,3 +486,4 @@ if __name__ == "__main__":
               f"{r.get('prop_city','')} | "
               f"yb={r.get('year_built','')} "
               f"long_term={r.get('long_term_owner', False)}")
+    log_lookup_stats()
