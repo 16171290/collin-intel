@@ -530,7 +530,17 @@ def build_search_url(term: str) -> str:
         f"&searchTerm={term}"
     )
 
-def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[list[dict], bool]:
+def _parse_table(html: str, date_from: datetime, date_to: datetime,
+                 doc_links: dict[str, str] | None = None) -> tuple[list[dict], bool]:
+    """
+    Parse a search-results page into record dicts.
+
+    doc_links: optional dict mapping doc_num -> '/doc/{id}' href, extracted
+    from the rendered React page via JS in run_clerk_scrape().  When present,
+    each record's clerk_url is built as a one-click direct link to the
+    document detail page; falls back to the two-step search-results URL only
+    when a doc_num isn't in the map.
+    """
     soup = BeautifulSoup(html, "lxml")
     records = []
     all_old = True
@@ -612,22 +622,27 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime) -> tuple[lis
         if not owner or owner == "N/A":
             continue
 
-        link = tr.find("a", href=True)
-        if link:
-            clerk_url = _abs_url(link["href"])
-        elif doc_num:
-            # Tyler Tech / Neumo PublicSearch advanced-search URL that filters
-            # to a single instrument number.  The `documentNumberRange` param
-            # takes a URL-encoded JSON array: ["2026000060930"].  Verified
-            # working on the same platform at tarrant.tx.publicsearch.us.
-            clerk_url = (
-                f"{CLERK_BASE}/results"
-                f"?department=RP"
-                f"&documentNumberRange=%5B%22{doc_num}%22%5D"
-                f"&searchType=advancedSearch"
-            )
+        # Prefer the direct /doc/{id} link extracted from the rendered page
+        # (one click straight to detail).  Fall back to a /doc/ link in the
+        # row HTML, then to the search-results URL only if neither is found.
+        if doc_links and doc_num and doc_num in doc_links:
+            clerk_url = _abs_url(doc_links[doc_num])
         else:
-            clerk_url = ""
+            link = tr.find("a", href=lambda h: h and "/doc/" in h)
+            if link:
+                clerk_url = _abs_url(link["href"])
+            elif doc_num:
+                # Tyler Tech / Neumo PublicSearch advanced-search URL that
+                # filters to a single instrument number.  Two-click fallback.
+                clerk_url = (
+                    f"{CLERK_BASE}/results"
+                    f"?department=RP"
+                    f"&documentNumberRange=%5B%22{doc_num}%22%5D"
+                    f"&searchType=advancedSearch"
+                )
+            else:
+                clerk_url = ""
+
         cat, cat_label = _map_doc_type(doc_type)
 
         # Skip unrecognized doc types (DEED, RELEASE, mortgages, etc.)
@@ -843,7 +858,34 @@ async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]
                     log.warning("Page %d: table not found after wait", page_num)
 
                 html = await page.content()
-                recs, all_old = _parse_table(html, date_from, date_to)
+
+                # Extract per-row /doc/{id} hrefs via JS so each record gets a
+                # one-click direct link to the document detail page (instead
+                # of the slower two-step search-results URL).
+                try:
+                    doc_links = await page.evaluate("""
+                        () => {
+                            const result = {};
+                            document.querySelectorAll('a[href*="/doc/"]').forEach(a => {
+                                const row = a.closest('tr');
+                                if (!row) return;
+                                const cells = row.querySelectorAll('td');
+                                for (const cell of cells) {
+                                    const text = cell.textContent.trim();
+                                    if (/^\\d{12,14}$/.test(text)) {
+                                        result[text] = a.getAttribute('href');
+                                        break;
+                                    }
+                                }
+                            });
+                            return result;
+                        }
+                    """)
+                except Exception as exc:
+                    log.debug("Doc-link JS extraction failed: %s", exc)
+                    doc_links = {}
+
+                recs, all_old = _parse_table(html, date_from, date_to, doc_links)
                 log.info("Page %d: %d records (all_old=%s) | total so far: %d",
                          page_num, len(recs), all_old, len(all_records))
                 all_records.extend(recs)
