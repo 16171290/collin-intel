@@ -281,6 +281,16 @@ _NON_HOMEOWNER_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Standalone corporate suffix tokens.  Distinct from _NON_HOMEOWNER_RE which
+# catches explicit non-homeowner *patterns*; this catches generic business
+# entities (LLCs, INCs, LPs) that are almost always filers in lien/judgment
+# records, not the actual property owner.
+_CORPORATE_SUFFIX_RE = re.compile(
+    r"\b(INC|INCORPORATED|LLC|L\.L\.C|CORP|CORPORATION|LTD|LIMITED|"
+    r"COMPANY|L\.P|LP|LLP|PLLC)\b",
+    re.IGNORECASE,
+)
+
 def is_non_homeowner(name: str) -> bool:
     """True when the name is almost certainly a plaintiff / filer / entity /
     placeholder, not an actual property owner."""
@@ -289,6 +299,20 @@ def is_non_homeowner(name: str) -> bool:
     if len(name.split()) < 2:           # 'PUBLIC', 'INSPIRATION', etc.
         return True
     return bool(_NON_HOMEOWNER_RE.search(name))
+
+def looks_corporate(name: str) -> bool:
+    """
+    True if `name` carries a generic corporate-suffix token (INC, LLC, CORP,
+    LTD, COMPANY, LP, LLP, PLLC).  Distinct from is_non_homeowner: that catches
+    specific non-homeowner patterns (banks, HOAs, subdivisions); this catches
+    *generic* business entities that aren't called out by those patterns —
+    e.g. 'BRIGHTVIEW LANDSCAPE DEVELOPMENT INC', 'TET TITAN ELECTRIC TEXAS LLC',
+    'M1 REAL ESTATE PARTNERS LTD'.  These are virtually always filers in
+    lien/judgment records, never the homeowner being targeted.
+    """
+    if not name:
+        return False
+    return bool(_CORPORATE_SUFFIX_RE.search(name))
 
 
 # Doc-type categories where the clerk indexes the FILER as grantor and the
@@ -303,10 +327,13 @@ def pick_homeowner_name(cat: str, owner: str, grantee: str) -> str:
     Return the cleaned name most likely to match a CAD parcel owner.
 
     - PRO: decedent's name is in the grantor field (after stripping noise)
-    - Lien/judgment cats: if grantor looks like a plaintiff/filer, use grantee
-    - Default: use grantor
-    Returns empty string when neither field yields a usable name (caller
-    should treat as not_actionable).
+    - Lien/judgment cats: grantor is the filer (creditor, contractor,
+      plaintiff, taxing authority), grantee is the homeowner.  Prefer
+      grantee when grantor looks like a filer — either matching the
+      explicit non-homeowner regex OR carrying a generic corporate suffix.
+      When BOTH parties look like entities, the record isn't a motivated-
+      seller lead — return empty so caller marks it not_actionable.
+    - Default: use grantor, fall back to grantee.
     """
     owner_clean   = clean_owner(owner)
     grantee_clean = clean_owner(grantee)
@@ -314,14 +341,26 @@ def pick_homeowner_name(cat: str, owner: str, grantee: str) -> str:
     if cat == "PRO":
         return owner_clean
 
-    if cat in GRANTEE_AS_HOMEOWNER_CATS and is_non_homeowner(owner_clean):
-        if grantee_clean and not is_non_homeowner(grantee_clean):
-            return grantee_clean
+    if cat in GRANTEE_AS_HOMEOWNER_CATS:
+        grantor_is_filer = (
+            is_non_homeowner(owner_clean)
+            or looks_corporate(owner_clean)
+        )
+        if grantor_is_filer:
+            grantee_is_homeowner = (
+                grantee_clean
+                and not is_non_homeowner(grantee_clean)
+                and not looks_corporate(grantee_clean)
+            )
+            if grantee_is_homeowner:
+                return grantee_clean
+            # Both parties are entities / non-homeowner → not actionable
+            return ""
 
+    # Default path: grantor if usable, else grantee as last-ditch fallback
     if not is_non_homeowner(owner_clean):
         return owner_clean
 
-    # Last-ditch fallback: usable grantee even when grantor looked OK
     if grantee_clean and not is_non_homeowner(grantee_clean):
         return grantee_clean
 
@@ -520,8 +559,91 @@ def lookup_parcel(owner: str) -> dict:
 
 
 # ==============================================================================
-#  CLERK PORTAL
+#  CLERK PORTAL — NETWORK INTERCEPTION FOR ONE-CLICK /doc/{id} URLs
+#
+#  The React app doesn't render <a href="/doc/..."> tags in the DOM — rows
+#  navigate via onClick handlers, so HTML scraping can't find the internal
+#  document IDs.  Instead, we intercept the JSON API responses the React app
+#  makes to fill its results table.  Those responses pair the public doc
+#  number (12-14 digits, year-prefixed) with the internal database ID used
+#  in /doc/{id} URLs.
 # ==============================================================================
+
+# Shared map filled by _on_response() during scraping, consumed by
+# _parse_table() to build one-click clerk URLs.
+captured_doc_links: dict[str, str] = {}
+
+
+def _scan_json_for_doc_links(obj: Any, out: dict[str, str]) -> None:
+    """
+    Walk a JSON tree looking for objects containing both a doc-number-like
+    field (12-14 digits matching the clerk instrument-number format) AND a
+    shorter internal-ID field.  Adds doc_num -> '/doc/{id}' entries to `out`.
+    """
+    if isinstance(obj, list):
+        for item in obj:
+            _scan_json_for_doc_links(item, out)
+        return
+    if not isinstance(obj, dict):
+        return
+
+    doc_num: str | None = None
+    doc_id:  str | None = None
+    for k, v in obj.items():
+        if not isinstance(v, (str, int)):
+            continue
+        vs = str(v).strip()
+        kl = k.lower()
+        # Clerk instrument number: 12-14 digits, year-prefixed
+        if re.match(r"^\d{12,14}$", vs) and any(p in kl for p in (
+            "documentnumber", "instrumentnumber", "docnum", "doc_num",
+            "instrument_number", "filingnumber", "filing_number",
+        )):
+            doc_num = vs
+        # Internal database ID: 6-12 digits in a field named like 'id'
+        if re.match(r"^\d{6,12}$", vs) and (
+            kl == "id" or kl.endswith("_id")
+            or kl in ("docid", "documentid", "instrumentid")
+        ):
+            doc_id = vs
+
+    if doc_num and doc_id:
+        out[doc_num] = f"/doc/{doc_id}"
+
+    # Recurse into nested values
+    for v in obj.values():
+        _scan_json_for_doc_links(v, out)
+
+
+async def _on_response(response) -> None:
+    """
+    Network-response listener registered on the browser context.  Captures
+    JSON bodies from likely search-API endpoints and harvests doc_num ->
+    /doc/{id} mappings into the shared captured_doc_links dict.
+    """
+    try:
+        url = response.url.lower()
+        if not any(p in url for p in (
+            "/search", "/result", "/documents", "/instrument", "/api"
+        )):
+            return
+        ct = response.headers.get("content-type", "") or ""
+        if "json" not in ct.lower():
+            return
+        try:
+            data = await response.json()
+        except Exception:
+            return
+        before = len(captured_doc_links)
+        _scan_json_for_doc_links(data, captured_doc_links)
+        gained = len(captured_doc_links) - before
+        if gained:
+            log.debug("Captured %d new doc-link entries from %s (total: %d)",
+                      gained, response.url, len(captured_doc_links))
+    except Exception:
+        # Never let listener errors crash the scrape
+        pass
+
 
 def build_search_url(term: str) -> str:
     return (
@@ -535,11 +657,11 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime,
     """
     Parse a search-results page into record dicts.
 
-    doc_links: optional dict mapping doc_num -> '/doc/{id}' href, extracted
-    from the rendered React page via JS in run_clerk_scrape().  When present,
-    each record's clerk_url is built as a one-click direct link to the
-    document detail page; falls back to the two-step search-results URL only
-    when a doc_num isn't in the map.
+    doc_links: optional dict mapping doc_num -> '/doc/{id}' href (filled by
+    network interception in run_clerk_scrape).  When a doc_num is in the
+    map, each record's clerk_url is built as a one-click direct link.  Falls
+    back to a /doc/ link in the row HTML, then to the two-step search-results
+    URL only when neither is available.
     """
     soup = BeautifulSoup(html, "lxml")
     records = []
@@ -587,10 +709,9 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime,
         doc_type = g("doc type")
         legal    = g("legal description")
 
-        # Amount: try named columns first (consideration, amount, debt, value,
-        # judgment amount, etc.), then fall back to scanning every cell for a
-        # dollar pattern.  Judgments, IRS / state tax liens, and HOA liens
-        # often carry an amount directly in the index.
+        # Amount: try named columns first, then fall back to scanning every
+        # cell for a dollar pattern.  Judgments, IRS / state tax liens, and
+        # HOA liens often carry an amount directly in the index.
         amount = g(
             "consideration", "amount", "amt", "amount owed",
             "consideration amount", "judgment amount", "debt amount",
@@ -622,7 +743,7 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime,
         if not owner or owner == "N/A":
             continue
 
-        # Prefer the direct /doc/{id} link extracted from the rendered page
+        # Prefer the direct /doc/{id} link from the network-captured map
         # (one click straight to detail).  Fall back to a /doc/ link in the
         # row HTML, then to the search-results URL only if neither is found.
         if doc_links and doc_num and doc_num in doc_links:
@@ -632,8 +753,7 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime,
             if link:
                 clerk_url = _abs_url(link["href"])
             elif doc_num:
-                # Tyler Tech / Neumo PublicSearch advanced-search URL that
-                # filters to a single instrument number.  Two-click fallback.
+                # Two-click search-results fallback
                 clerk_url = (
                     f"{CLERK_BASE}/results"
                     f"?department=RP"
@@ -645,7 +765,7 @@ def _parse_table(html: str, date_from: datetime, date_to: datetime,
 
         cat, cat_label = _map_doc_type(doc_type)
 
-        # Skip unrecognized doc types (DEED, RELEASE, mortgages, etc.)
+        # Skip unrecognized doc types (DEED, RELEASE, mortgages, etc.).
         # Only keep records whose mapped cat is in our motivated-seller map.
         if cat not in DOC_TYPE_MAP:
             continue
@@ -770,6 +890,9 @@ async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]
                     "LN", "LNMECH", "LNIRS", "LNFED",
                     "LP", "NOFC", "TAXDEED"]
 
+    # Reset captured doc-link map for this run
+    captured_doc_links.clear()
+
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(
             headless=True,
@@ -801,6 +924,11 @@ async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]
                                   {get: () => ['en-US','en']});
             window.chrome = {runtime: {}};
         """)
+
+        # Register the network-response listener so doc_num -> /doc/{id}
+        # mappings get harvested from API responses as the React app loads
+        # search results and paginates.
+        context.on("response", _on_response)
 
         warmup = await context.new_page()
         try:
@@ -859,11 +987,11 @@ async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]
 
                 html = await page.content()
 
-                # Extract per-row /doc/{id} hrefs via JS so each record gets a
-                # one-click direct link to the document detail page (instead
-                # of the slower two-step search-results URL).
+                # Belt-and-suspenders: also try JS DOM extraction in case the
+                # React app does happen to render <a href="/doc/..."> for some
+                # rows.  Merged with the network-captured map.
                 try:
-                    doc_links = await page.evaluate("""
+                    js_doc_links = await page.evaluate("""
                         () => {
                             const result = {};
                             document.querySelectorAll('a[href*="/doc/"]').forEach(a => {
@@ -883,11 +1011,16 @@ async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]
                     """)
                 except Exception as exc:
                     log.debug("Doc-link JS extraction failed: %s", exc)
-                    doc_links = {}
+                    js_doc_links = {}
 
-                recs, all_old = _parse_table(html, date_from, date_to, doc_links)
-                log.info("Page %d: %d records (all_old=%s) | total so far: %d",
-                         page_num, len(recs), all_old, len(all_records))
+                # Network-captured (primary) merged with JS-extracted (backup)
+                combined_links = {**captured_doc_links, **js_doc_links}
+
+                recs, all_old = _parse_table(html, date_from, date_to, combined_links)
+                log.info("Page %d: %d records (all_old=%s) | total so far: %d "
+                         "| doc-link map: %d entries",
+                         page_num, len(recs), all_old, len(all_records),
+                         len(combined_links))
                 all_records.extend(recs)
 
                 if all_old and page_num > 2:
@@ -914,7 +1047,8 @@ async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]
 
         await browser.close()
 
-    log.info("Raw records collected: %d", len(all_records))
+    log.info("Raw records collected: %d | doc-link entries captured: %d",
+             len(all_records), len(captured_doc_links))
     return all_records
 
 
@@ -1038,7 +1172,7 @@ def assemble_records(raw_records: list[dict], today: datetime) -> list[dict]:
                 "mail_city":       parcel.get("mail_city", ""),
                 "mail_state":      parcel.get("mail_state", "TX"),
                 "mail_zip":        parcel.get("mail_zip", ""),
-                # New: investment-screening signals from the local CAD index
+                # Investment-screening signals from the local CAD index
                 "year_built":      parcel.get("year_built", ""),
                 "sqft":            parcel.get("sqft", ""),
                 "market_value":    parcel.get("market_value", ""),
