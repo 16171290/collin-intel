@@ -150,10 +150,21 @@ def _map_doc_type(raw_type: str) -> tuple[str, str]:
     t = raw_type.upper().strip()
     if t in DOC_TYPE_MAP:
         return t, DOC_TYPE_MAP[t][1]
-    if "LIS PENDENS" in t and "RELEASE" not in t:
+    # Affidavit of Heirship is a probate-precursor document filed when heirs
+    # claim ownership after a death. MUST be checked before the "IRS" rule
+    # below, since "HEIRSHIP" contains the substring "IRS" and would otherwise
+    # be mislabeled as an IRS Lien.
+    if "HEIRSHIP" in t:
+        return "PRO", "Affidavit of Heirship"
+    # All RELEASE documents (Release of State Tax Lien, Release of Child Support
+    # Lien, Release of Lis Pendens, etc.) are debt-paid notices — not motivated-
+    # seller signals. MUST be checked before the generic "LIEN" rule below,
+    # since phrases like "RELEASE STATE TAX LIEN" would otherwise fall through
+    # to the LIEN catch and be miscategorized as LN.
+    if "RELEASE" in t:
+        return "RELLP", "Release"
+    if "LIS PENDENS" in t:
         return "LP", "Lis Pendens"
-    if "RELEASE" in t and "LIS PENDENS" in t:
-        return "RELLP", "Release Lis Pendens"
     if "FORECLOSURE" in t:
         return "NOFC", "Notice of Foreclosure"
     if "TAX DEED" in t:
