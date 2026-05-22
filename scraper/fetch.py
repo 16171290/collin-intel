@@ -47,6 +47,30 @@ except ImportError as _e:
     def lookup_parcel_local(name: str) -> dict: return {}
     def _load_local_index() -> None: pass
 
+# Address-based CCAD lookup — used by the foreclosure scraper to resolve
+# property addresses (which have no owner name) to homeowner + CAD details.
+# Import is optional: if parcel_index.py is an older version without this
+# function, foreclosure records still emit with empty owner fields.
+try:
+    from parcel_index import lookup_parcel_by_address
+    _ADDRESS_LOOKUP = True
+except ImportError:
+    _ADDRESS_LOOKUP = False
+    def lookup_parcel_by_address(addr: str, city: str = "") -> dict: return {}
+
+# Foreclosure portal scraper — pulls Notice of Trustee Sale records that
+# don't appear in the clerk Real Property whitelist. Optional import so
+# fetch.py still works if the file isn't deployed.
+try:
+    from foreclosure_scraper import run_foreclosure_scrape
+    _FORECLOSURE_SCRAPER = True
+    log.info("Foreclosure scraper module loaded")
+except ImportError as _e:
+    log.warning("foreclosure_scraper.py not found — foreclosure portal disabled (%s)", _e)
+    _FORECLOSURE_SCRAPER = False
+    async def run_foreclosure_scrape(date_from, date_to, property_type_filter=""):
+        return []
+
 
 CLERK_BASE     = "https://collin.tx.publicsearch.us"
 LOOKBACK_DAYS  = 7
@@ -1301,11 +1325,74 @@ async def main() -> None:
     log.info("Raw records from clerk: %d", len(raw_records))
 
     records = assemble_records(raw_records, today)
+
+    # ----- Foreclosure portal pass -------------------------------------------
+    # Pulls Notice of Trustee Sale records from the dedicated Collin County
+    # foreclosure portal (separate data source from the clerk's Real Property
+    # records). Filtered to Single Family (A1) and last LOOKBACK_DAYS by file
+    # date. Each record is enriched with owner/CAD details via address lookup
+    # before being appended to the unified record list.
+    if _FORECLOSURE_SCRAPER:
+        log.info("-" * 60)
+        log.info("Foreclosure portal scrape starting")
+        log.info("-" * 60)
+        try:
+            foreclosure_records = await run_foreclosure_scrape(
+                start, today,
+                property_type_filter="Residential Single Family (A1)",
+            )
+            enriched = _enrich_foreclosure_records(foreclosure_records)
+            log.info("Foreclosure records: %d total, %d with CCAD owner+detail",
+                     len(enriched),
+                     sum(1 for r in enriched if r.get("owner")))
+            records.extend(enriched)
+        except Exception as exc:
+            log.exception("Foreclosure portal scrape failed: %s", exc)
+            log.info("Continuing with clerk-only results")
+
     save_output(records, date_from, date_to)
     export_ghl_csv(records)
 
     log.info("Complete. %d records, %d with address.",
              len(records), sum(1 for r in records if r.get("prop_address")))
+
+
+def _enrich_foreclosure_records(records: list[dict]) -> list[dict]:
+    """For each foreclosure record, look up owner + CAD details by address
+    and fill in the empty fields. Records whose addresses aren't in CCAD
+    stay actionable — the sale date is the real lead signal.
+    """
+    out = []
+    for r in records:
+        addr = r.get("prop_address", "")
+        city = r.get("prop_city", "")
+        cad = lookup_parcel_by_address(addr, city) if _ADDRESS_LOOKUP else {}
+        if cad:
+            # Pull in owner name + property characteristics; preserve the
+            # incoming sale_date / source / clerk_url etc.
+            r["owner"]          = cad.get("owner_name", "")
+            r["homeowner_name"] = cad.get("owner_name", "")
+            r["mail_address"]   = cad.get("mail_address", r.get("mail_address", ""))
+            r["mail_city"]      = cad.get("mail_city",    r.get("mail_city", ""))
+            r["mail_state"]     = cad.get("mail_state",   r.get("mail_state", "TX"))
+            r["mail_zip"]       = cad.get("mail_zip",     r.get("mail_zip", ""))
+            r["year_built"]     = cad.get("year_built", "")
+            r["sqft"]           = cad.get("sqft", "")
+            r["market_value"]   = cad.get("market_value", "")
+            r["deed_year"]      = cad.get("deed_year", "")
+            r["long_term_owner"] = bool(cad.get("long_term_owner", False))
+            # Add the long-term-owner / pre-2000-build flags so foreclosure
+            # records get the same investment-thesis flags as clerk records.
+            try:
+                if int(r["year_built"]) < 2000:
+                    if "Pre-2000 build" not in r["flags"]:
+                        r["flags"].append("Pre-2000 build")
+            except (ValueError, TypeError):
+                pass
+            if r["long_term_owner"] and "Long-term owner" not in r["flags"]:
+                r["flags"].append("Long-term owner")
+        out.append(r)
+    return out
 
 
 if __name__ == "__main__":
