@@ -69,6 +69,45 @@ _index: dict[str, list[dict]] = {}
 # AND only accepted when the initial key resolves to exactly one record.
 _initial_index: dict[str, list[dict]] = {}
 
+# Address-keyed index for reverse lookups (foreclosure scraper feeds in
+# property addresses; we resolve to the owner + CAD details). Keys are
+# produced by _normalize_address() so equivalent street-suffix and
+# directional spellings collide cleanly.
+_address_index: dict[str, list[dict]] = {}
+
+# Street suffix and directional standardization for address-key generation.
+# Both clerk-side and CCAD addresses get hashed through the same normalizer
+# so spelling variants ('DRIVE' vs 'DR', 'NORTH' vs 'N') hit the same bucket.
+_STREET_SUFFIX_MAP = {
+    "STREET":   "ST",
+    "AVENUE":   "AVE",
+    "DRIVE":    "DR",
+    "ROAD":     "RD",
+    "LANE":     "LN",
+    "BOULEVARD":"BLVD",
+    "CIRCLE":   "CIR",
+    "COURT":    "CT",
+    "PLACE":    "PL",
+    "TRAIL":    "TRL",
+    "PARKWAY":  "PKWY",
+    "HIGHWAY":  "HWY",
+    "TERRACE":  "TER",
+    "SQUARE":   "SQ",
+    "CROSSING": "XING",
+    "LANDING":  "LNDG",
+    "JUNCTION": "JCT",
+    "HARBOR":   "HBR",
+    "GARDEN":   "GDN",
+    "GARDENS":  "GDNS",
+    "VIEW":     "VW",
+}
+_DIRECTIONAL_MAP = {
+    "NORTH":     "N",  "SOUTH":     "S",  "EAST":      "E",  "WEST":      "W",
+    "NORTHEAST": "NE", "NORTHWEST": "NW", "SOUTHEAST": "SE", "SOUTHWEST": "SW",
+}
+_SUFFIX_PAT      = re.compile(r"\b(" + "|".join(_STREET_SUFFIX_MAP) + r")\b")
+_DIRECTIONAL_PAT = re.compile(r"\b(" + "|".join(_DIRECTIONAL_MAP)   + r")\b")
+
 _loaded_from:   Optional[str]         = None
 
 # Diagnostic counters — reset on each load_index() call.  Reported by
@@ -98,6 +137,28 @@ def _normalize(s: str) -> str:
 
 def _strip_suffixes(tokens: list[str]) -> list[str]:
     return [t for t in tokens if t not in SUFFIXES]
+
+
+def _normalize_address(addr: str) -> str:
+    """Standardize a street address so equivalent spellings hash to the same
+    bucket. Used both at index-build time (over CCAD addresses) and at
+    lookup time (over addresses fed in by foreclosure scraper).
+
+    Handles:
+      - Case folding ('10022 Plainsman Ln' -> '10022 PLAINSMAN LN')
+      - Street-type expansion ('DRIVE' -> 'DR', 'STREET' -> 'ST', etc.)
+      - Directional expansion ('NORTH' -> 'N', 'SOUTHWEST' -> 'SW', etc.)
+      - Punctuation cleanup (commas, periods, hash marks)
+      - Whitespace collapse
+    """
+    if not addr:
+        return ""
+    s = addr.upper().strip()
+    s = re.sub(r"[.,#]", " ", s)
+    s = _DIRECTIONAL_PAT.sub(lambda m: _DIRECTIONAL_MAP[m.group(1)], s)
+    s = _SUFFIX_PAT.sub(lambda m: _STREET_SUFFIX_MAP[m.group(1)], s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
 
 
 # ---------------------------------------------------------------------------
@@ -259,7 +320,7 @@ def _fetch_latest_csv() -> tuple[str, str]:
 
 def load_index(force: bool = False) -> None:
     """Build the in-memory index.  Idempotent unless force=True."""
-    global _index, _initial_index, _loaded_from
+    global _index, _initial_index, _address_index, _loaded_from
     if _index and not force:
         return
     ds, csv_text = _fetch_latest_csv()
@@ -267,11 +328,15 @@ def load_index(force: bool = False) -> None:
 
     new_index:         dict[str, list[dict]] = {}
     new_initial_index: dict[str, list[dict]] = {}
+    new_address_index: dict[str, list[dict]] = {}
     n_rows  = 0
     n_keys  = 0
     n_ikeys = 0
+    n_addrs = 0
     for row in reader:
         n_rows += 1
+        first = row.get("First Name", "")
+        last  = row.get("Last Name",  "")
         rec = {
             "prop_address":     (row.get("Property Address") or "").strip(),
             "prop_city":        (row.get("Property City")    or "").strip(),
@@ -287,18 +352,26 @@ def load_index(force: bool = False) -> None:
             "deed_year":        (row.get("Deed Year")        or "").strip(),
             "long_term_owner":  (row.get("Long Term Owner")  or "").strip().upper() == "YES",
             "account":          (row.get("Account Number")   or "").strip(),
+            # Owner name fields — included so the address-based lookup can
+            # populate `owner` / `homeowner_name` on foreclosure records.
+            "owner_first":      first.strip(),
+            "owner_last":       last.strip(),
+            "owner_name":       (f"{last.strip()} {first.strip()}").strip().upper(),
         }
-        first = row.get("First Name", "")
-        last  = row.get("Last Name",  "")
         for key in _keys_for_row(first, last):
             new_index.setdefault(key, []).append(rec)
             n_keys += 1
         for ikey in _initial_keys_for_row(first, last):
             new_initial_index.setdefault(ikey, []).append(rec)
             n_ikeys += 1
+        addr_key = _normalize_address(rec["prop_address"])
+        if addr_key:
+            new_address_index.setdefault(addr_key, []).append(rec)
+            n_addrs += 1
 
     _index         = new_index
     _initial_index = new_initial_index
+    _address_index = new_address_index
     _loaded_from   = ds
 
     # Reset diagnostic counters for the fresh index
@@ -308,8 +381,9 @@ def load_index(force: bool = False) -> None:
     _lookup_stats["misses"]        = 0
     _lookup_stats["miss_examples"] = []
 
-    log.info("Parcel index ready: %d rows -> %d primary keys (%d unique), %d initial keys (%d unique)",
-             n_rows, n_keys, len(new_index), n_ikeys, len(new_initial_index))
+    log.info("Parcel index ready: %d rows -> %d primary keys (%d unique), %d initial keys (%d unique), %d addresses (%d unique)",
+             n_rows, n_keys, len(new_index), n_ikeys, len(new_initial_index),
+             n_addrs, len(new_address_index))
 
 
 # ---------------------------------------------------------------------------
@@ -421,6 +495,46 @@ def lookup_parcel_local(homeowner_name: str) -> dict:
     if len(_lookup_stats["miss_examples"]) < 30:
         _lookup_stats["miss_examples"].append(homeowner_name)
     return {}
+
+
+def lookup_parcel_by_address(prop_address: str, prop_city: str = "") -> dict:
+    """Reverse lookup: find the CCAD record (owner + property details) for
+    a given property address. Used by the foreclosure scraper, which has
+    full addresses but not owner names.
+
+    Returns the same shape as lookup_parcel_local() plus owner_first /
+    owner_last / owner_name on hit, or {} on miss.
+
+    The address is normalized through _normalize_address() before lookup
+    so 'DRIVE'/'DR', 'NORTH'/'N', etc. all collide correctly.
+    """
+    if not prop_address:
+        return {}
+    if not _index:
+        try:
+            load_index()
+        except Exception as e:
+            log.warning("parcel index unavailable for address lookup: %s", e)
+            return {}
+    if not _address_index:
+        return {}
+
+    key = _normalize_address(prop_address)
+    if not key:
+        return {}
+    candidates = _address_index.get(key, [])
+    if not candidates:
+        return {}
+
+    # When city is provided, prefer the same-city match. Collin CCAD is
+    # generally one-city-per-address, so this is mostly a tiebreaker for
+    # cases where the same numbered street name exists in two cities.
+    if prop_city:
+        cu = prop_city.upper().strip()
+        for c in candidates:
+            if c.get("prop_city", "").upper() == cu:
+                return c
+    return candidates[0]
 
 
 def log_lookup_stats() -> None:
