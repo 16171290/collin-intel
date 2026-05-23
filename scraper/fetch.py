@@ -71,6 +71,20 @@ except ImportError as _e:
     async def run_foreclosure_scrape(date_from, date_to, property_type_filter=""):
         return []
 
+# Probate document enricher — signs into the clerk portal, downloads the clean
+# PDF for each PRO record, and extracts affiant (heir) name + address +
+# property + will status. Optional import; needs CLERK_USERNAME/CLERK_PASSWORD
+# env vars and OCR libs to actually run, else it no-ops.
+try:
+    from probate_enricher import enrich_probate_records
+    _PROBATE_ENRICHER = True
+    log.info("Probate enricher module loaded")
+except ImportError as _e:
+    log.warning("probate_enricher.py not found — probate enrichment disabled (%s)", _e)
+    _PROBATE_ENRICHER = False
+    async def enrich_probate_records(records):
+        return records
+
 
 CLERK_BASE     = "https://collin.tx.publicsearch.us"
 LOOKBACK_DAYS  = 7
@@ -94,14 +108,16 @@ DOC_TYPE_MAP: dict[str, tuple[str, str, list[str]]] = {
     "CCJ":      ("CCJ",      "Certified Judgment",      ["Judgment lien"]),
     "DRJUD":    ("DRJUD",    "Domestic Judgment",       ["Judgment lien"]),
     "LNCORPTX": ("LNCORPTX", "Corp Tax Lien",           ["Tax lien"]),
-    "LNIRS":    ("LNIRS",    "IRS Lien",                ["Tax lien"]),
     "LNFED":    ("LNFED",    "Federal Lien",            ["Tax lien"]),
     "LN":       ("LN",       "Lien",                    ["Mechanic lien"]),
-    "LNMECH":   ("LNMECH",   "Mechanic Lien",           ["Mechanic lien"]),
-    "LNHOA":    ("LNHOA",    "HOA Lien",                ["Mechanic lien"]),
     "MEDLN":    ("MEDLN",    "Medicaid Lien",           ["Judgment lien"]),
     "PRO":      ("PRO",      "Probate Document",        ["Probate / estate"]),
 }
+# Removed per criteria change (poor lead quality observed):
+#   LNHOA  (HOA liens)      — both parties usually HOA/management cos
+#   LNIRS  (IRS liens)      — note: Affidavit of Heirship now routes to PRO,
+#                             so this only drops genuine IRS-lien filings
+#   LNMECH (Mechanic liens) — contractor vs builder, not homeowner-motivated
 
 ROOT          = Path(__file__).resolve().parent.parent
 DASHBOARD_DIR = ROOT / "dashboard"
@@ -921,8 +937,8 @@ async def _apply_year_filter(page: Page, year: int) -> None:
 
 async def run_clerk_scrape(date_from: datetime, date_to: datetime) -> list[dict]:
     all_records: list[dict] = []
-    search_terms = ["JUD", "CCJ", "LNHOA", "PRO",
-                    "LN", "LNMECH", "LNIRS", "LNFED",
+    search_terms = ["JUD", "CCJ", "PRO",
+                    "LN", "LNFED",
                     "LP", "NOFC", "TAXDEED"]
 
     # Reset captured doc-link map for this run
@@ -1325,6 +1341,21 @@ async def main() -> None:
     log.info("Raw records from clerk: %d", len(raw_records))
 
     records = assemble_records(raw_records, today)
+
+    # ----- Probate document enrichment ---------------------------------------
+    # For PRO records, sign into the clerk portal, download each official PDF,
+    # and parse out the affiant (living heir) + mailing address + property +
+    # will status. Turns "deceased estate" rows into mailable named leads.
+    # No-ops cleanly if credentials/libs are absent.
+    if _PROBATE_ENRICHER:
+        log.info("-" * 60)
+        log.info("Probate enrichment starting")
+        log.info("-" * 60)
+        try:
+            records = await enrich_probate_records(records)
+        except Exception as exc:
+            log.exception("Probate enrichment failed: %s", exc)
+            log.info("Continuing with un-enriched probate records")
 
     # ----- Foreclosure portal pass -------------------------------------------
     # Pulls Notice of Trustee Sale records from the dedicated Collin County
