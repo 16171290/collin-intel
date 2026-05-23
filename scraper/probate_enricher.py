@@ -220,77 +220,100 @@ def _results_url(doc_num: str) -> str:
 
 
 async def _login(page: Page, username: str, password: str) -> bool:
-    """Sign into the clerk portal. Best-effort across selector variations."""
-    try:
-        await page.goto(f"{CLERK_BASE}/login", wait_until="networkidle", timeout=NAV_TIMEOUT_MS)
-    except PWTimeout:
-        # Fall back to home + click a Sign In control
-        try:
-            await page.goto(CLERK_BASE, wait_until="networkidle", timeout=NAV_TIMEOUT_MS)
-            signin = page.get_by_role("link", name=re.compile(r"sign\s*in|log\s*in", re.I))
-            if await signin.count():
-                await signin.first.click()
-                await page.wait_for_timeout(ACTION_WAIT_MS)
-        except Exception:
-            pass
+    """Sign into the clerk portal via the /signin page.
 
+    The login form (confirmed from the live portal) is a same-domain page at
+    /signin with an 'Email' placeholder input, a 'Password' placeholder input,
+    and a 'Sign In' submit button. No SSO redirect.
+    """
+    # Use domcontentloaded (not networkidle) — the SPA holds connections open
+    # so networkidle never fires and would just time out.
+    try:
+        await page.goto(f"{CLERK_BASE}/signin?returnPath=%2F",
+                        wait_until="domcontentloaded", timeout=NAV_TIMEOUT_MS)
+    except PWTimeout:
+        log.warning("signin page load timeout, continuing")
     await page.wait_for_timeout(ACTION_WAIT_MS)
 
-    # Fill credentials
-    user_filled = pass_filled = False
+    # Wait for the email field to actually render before interacting.
+    email_field = None
     for cand in (
-        page.get_by_label(re.compile(r"email|username|user", re.I)),
-        page.get_by_placeholder(re.compile(r"email|username|user", re.I)),
-        page.locator('input[type="email"], input[name*="user" i], input[name*="email" i]'),
+        page.get_by_placeholder("Email", exact=True),
+        page.get_by_placeholder(re.compile(r"email", re.I)),
+        page.locator('input[type="email"]'),
+        page.locator('input[type="text"]').first,
     ):
         try:
-            if await cand.count():
-                await cand.first.fill(username, timeout=4000)
-                user_filled = True
-                break
+            await cand.first.wait_for(state="visible", timeout=6000)
+            email_field = cand.first
+            break
         except Exception:
             continue
+
+    pass_field = None
     for cand in (
-        page.get_by_label(re.compile(r"password", re.I)),
+        page.get_by_placeholder("Password", exact=True),
         page.get_by_placeholder(re.compile(r"password", re.I)),
         page.locator('input[type="password"]'),
     ):
         try:
             if await cand.count():
-                await cand.first.fill(password, timeout=4000)
-                pass_filled = True
+                pass_field = cand.first
                 break
         except Exception:
             continue
 
-    if not (user_filled and pass_filled):
-        log.error("Login form fields not found (user=%s pass=%s)", user_filled, pass_filled)
+    if email_field is None or pass_field is None:
+        log.error("Login form fields not found (email=%s pass=%s) at /signin",
+                  email_field is not None, pass_field is not None)
         return False
 
-    # Submit
+    try:
+        await email_field.fill(username, timeout=4000)
+        await pass_field.fill(password, timeout=4000)
+    except Exception as e:
+        log.error("Failed filling login fields: %s", e)
+        return False
+
+    # Click the Sign In submit button
+    clicked = False
     for cand in (
-        page.get_by_role("button", name=re.compile(r"sign\s*in|log\s*in|submit", re.I)),
+        page.get_by_role("button", name=re.compile(r"^\s*sign\s*in\s*$", re.I)),
+        page.locator('button:has-text("Sign In")'),
         page.locator('button[type="submit"]'),
     ):
         try:
             if await cand.count():
                 await cand.first.click(timeout=4000)
+                clicked = True
                 break
         except Exception:
             continue
+    if not clicked:
+        log.error("Sign In button not found")
+        return False
 
     await page.wait_for_timeout(VIEWER_WAIT_MS)
 
-    # Verify login by looking for a Sign Out control
+    # Confirm we're signed in: the header switches Sign In -> Sign Out, and we
+    # land back on the search app (returnPath=%2F).
     try:
-        signout = page.get_by_text(re.compile(r"sign\s*out|log\s*out", re.I))
+        signout = page.get_by_text(re.compile(r"sign\s*out", re.I))
         if await signout.count():
             log.info("Clerk portal login successful")
             return True
     except Exception:
         pass
-    log.warning("Login submitted but couldn't confirm a signed-in state")
-    return True  # proceed; download attempt will reveal auth issues
+    # Fallback check: are the login fields gone?
+    try:
+        still_login = await page.get_by_placeholder("Password", exact=True).count()
+        if still_login == 0:
+            log.info("Clerk portal login appears successful (form cleared)")
+            return True
+    except Exception:
+        pass
+    log.warning("Login submitted but couldn't confirm signed-in state; proceeding")
+    return True
 
 
 async def _download_document_pdf(page: Page, doc_num: str) -> Path | None:
