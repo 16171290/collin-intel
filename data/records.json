@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-05-23T21:29:24.329469+00:00",
+  "fetched_at": "2026-05-23T22:26:26.736681+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
     "from": "5/16/2026",
@@ -50,9 +50,9 @@
       "filed": "5/22/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "HENN RICHARD M",
+      "owner": "RICHARD M. HENN.",
       "grantee": "",
-      "homeowner_name": "HENN RICHARD M",
+      "homeowner_name": "RICHARD M. HENN.",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -73,9 +73,13 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "RICHARD M. HENN.",
+      "decedent_name": "VELMA LOUISE HENN",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000069020",
@@ -215,9 +219,9 @@
       "filed": "5/22/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "Herring Judith Marie",
+      "owner": "WILLIAM LEONARD ANDERSON JR",
       "grantee": "Anderson William Leonard Jr.",
-      "homeowner_name": "HERRING JUDITH MARIE",
+      "homeowner_name": "WILLIAM LEONARD ANDERSON JR",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -238,9 +242,15 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified",
+        "Decedent owned property"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "WILLIAM LEONARD ANDERSON JR",
+      "property_address_doc": "3617 Carver Court Lane",
+      "owned_property": true,
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000068396",
@@ -248,9 +258,9 @@
       "filed": "5/22/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "Vickers Stephen Sean",
+      "owner": "Meaghan Moore",
       "grantee": "Vickers Gretchen Liesl",
-      "homeowner_name": "VICKERS STEPHEN SEAN",
+      "homeowner_name": "Meaghan Moore",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -271,9 +281,12 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "Meaghan Moore",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000068395",
@@ -281,9 +294,9 @@
       "filed": "5/22/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "Vickers Stephen Sean",
+      "owner": "Hiromi-Katherine Lauren Buss",
       "grantee": "Vickers Gretchen Liesl",
-      "homeowner_name": "VICKERS STEPHEN SEAN",
+      "homeowner_name": "Hiromi-Katherine Lauren Buss",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -304,9 +317,12 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "Hiromi-Katherine Lauren Buss",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000068368",
@@ -504,7 +520,9 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70
+      "score": 70,
+      "decedent_name": "Michael James Gonzalez",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000067477",
@@ -512,9 +530,9 @@
       "filed": "5/20/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "DOUGLAS SARAH FRANCES",
+      "owner": "Sarah Frances Douglas",
       "grantee": "DOUGLAS GEORGE M DECEASED",
-      "homeowner_name": "DOUGLAS SARAH FRANCES",
+      "homeowner_name": "Sarah Frances Douglas",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: RUSSELL WJS 2 MCK (DR) Lot: 4 Block: 2 Reference - 81/360",
@@ -535,9 +553,13 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "Sarah Frances Douglas",
+      "will_status": "Intestate (no will)",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000067386",
@@ -636,7 +658,9 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70
+      "score": 70,
+      "will_status": "Will referenced",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000067227",
@@ -1271,9 +1295,9 @@
       "filed": "5/19/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "STROMAN JUDY DANIELS",
+      "owner": "Robert Eugett",
       "grantee": "RECER JANYCE LOUEEN PETERS HARRIS MOWLAM HUNNICUT SHIFLETT PONDER DECEASED",
-      "homeowner_name": "STROMAN JUDY DANIELS",
+      "homeowner_name": "Robert Eugett",
       "not_actionable": false,
       "amount": "",
       "legal": "Survey - Name: HILBURN, LORENZO SY Survey: 382 Acres: 124.327",
@@ -1294,9 +1318,12 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "Robert Eugett",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000066881",
@@ -1535,9 +1562,9 @@
       "filed": "5/19/2026",
       "cat": "PRO",
       "cat_label": "Probate Document",
-      "owner": "WEST DONNA JO DECEASED ESTATE",
+      "owner": "Jaime Jo Kyle Mulder.",
       "grantee": "PUBLIC",
-      "homeowner_name": "WEST DONNA JO",
+      "homeowner_name": "Jaime Jo Kyle Mulder.",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -1558,9 +1585,12 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "Jaime Jo Kyle Mulder.",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000066329",
@@ -1626,7 +1656,9 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70
+      "score": 70,
+      "will_status": "Intestate (no will)",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000066149",
@@ -1824,7 +1856,8 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70
+      "score": 70,
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000065862",
@@ -1964,9 +1997,9 @@
       "filed": "5/22/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "SMITH SARA",
+      "owner": "SARA SMITH.",
       "grantee": "",
-      "homeowner_name": "SMITH SARA",
+      "homeowner_name": "SARA SMITH.",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -1986,9 +2019,13 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000069077%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week"
+        "New this week",
+        "Heir identified"
       ],
-      "score": 55
+      "score": 55,
+      "affiant_name": "SARA SMITH.",
+      "decedent_name": "VELMA LOUISE HENN",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000068792",
@@ -2247,38 +2284,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000068089",
-      "doc_type": "ABSTRACT OF JUDGMENT",
-      "filed": "5/21/2026",
-      "cat": "JUD",
-      "cat_label": "Judgment",
-      "owner": "CAPITAL ONE NA",
-      "grantee": "LUGONES RICARDO JR",
-      "homeowner_name": "CAPITAL ONE NA",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "LEGACY DR",
-      "prop_city": "PLANO",
-      "prop_state": "TX",
-      "prop_zip": "75024",
-      "mail_address": "PO BOX 460189",
-      "mail_city": "HOUSTON",
-      "mail_state": "TX",
-      "mail_zip": "77056",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000068089%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Judgment lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000068092",
       "doc_type": "ABSTRACT OF JUDGMENT",
       "filed": "5/21/2026",
@@ -2304,6 +2309,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000068092%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Judgment lien",
+        "New this week"
+      ],
+      "score": 55
+    },
+    {
+      "doc_num": "2026000068089",
+      "doc_type": "ABSTRACT OF JUDGMENT",
+      "filed": "5/21/2026",
+      "cat": "JUD",
+      "cat_label": "Judgment",
+      "owner": "CAPITAL ONE NA",
+      "grantee": "LUGONES RICARDO JR",
+      "homeowner_name": "CAPITAL ONE NA",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "LEGACY DR",
+      "prop_city": "PLANO",
+      "prop_state": "TX",
+      "prop_zip": "75024",
+      "mail_address": "PO BOX 460189",
+      "mail_city": "HOUSTON",
+      "mail_state": "TX",
+      "mail_zip": "77056",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000068089%22%5D&searchType=advancedSearch",
       "flags": [
         "Judgment lien",
         "New this week"
@@ -2380,9 +2417,9 @@
       "filed": "5/21/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "SHIAO CHEE SHUE",
+      "owner": "Chee Shue Shiao",
       "grantee": "CHANG GRACE WEN-JEN DECEASED",
-      "homeowner_name": "SHIAO CHEE SHUE",
+      "homeowner_name": "Chee Shue Shiao",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: SETTLEMENT CRAIG RANCH MCKINNEY Lot: 10R Block: E Reference - 2011/77",
@@ -2402,9 +2439,17 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000067882%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week"
+        "New this week",
+        "Heir identified",
+        "Unprobated estate"
       ],
-      "score": 55
+      "score": 55,
+      "affiant_name": "Chee Shue Shiao",
+      "affiant_address": "281 2",
+      "mail_address_doc": "281 2",
+      "decedent_name": "Wen Jen Chang",
+      "will_status": "Unprobated will / no administration opened",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000067776",
@@ -2700,9 +2745,9 @@
       "filed": "5/20/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "SCHULTZ JANET L",
+      "owner": "Janet L. Schultz",
       "grantee": "SCHULTZ LAURENCE D DECEASED",
-      "homeowner_name": "SCHULTZ JANET L",
+      "homeowner_name": "Janet L. Schultz",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: MORONEY FARMS #1 RSN Lot: 27 Block: E Reference - M/339",
@@ -2722,9 +2767,14 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000067648%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week"
+        "New this week",
+        "Heir identified"
       ],
-      "score": 55
+      "score": 55,
+      "affiant_name": "Janet L. Schultz",
+      "affiant_address": "4505, Sanderfsa Texas, 75082",
+      "mail_address_doc": "4505, Sanderfsa Texas, 75082",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000067471",
@@ -3012,7 +3062,8 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 55
+      "score": 55,
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000066766",
@@ -3972,7 +4023,8 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000068362",
@@ -4012,9 +4064,9 @@
       "filed": "5/21/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "MUDUPU VENKAT REDDY",
+      "owner": "Venkat Redd",
       "grantee": "KOTHA SWETHA DECEASED",
-      "homeowner_name": "MUDUPU VENKAT REDDY",
+      "homeowner_name": "Venkat Redd",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: EDGEWOOD FRISCO Lot: 57 Block: F Reference - 2018/505",
@@ -4034,9 +4086,14 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000068289%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week"
+        "New this week",
+        "Heir identified"
       ],
-      "score": 50
+      "score": 50,
+      "affiant_name": "Venkat Redd",
+      "decedent_name": "BY COUNTY OF COLLIN",
+      "will_status": "Intestate (no will)",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000068282",
@@ -4068,7 +4125,9 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "will_status": "Will referenced",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000068253",
@@ -4300,9 +4359,9 @@
       "filed": "5/20/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "CLINE BRANDY",
+      "owner": "Brandy Cline",
       "grantee": "HOLDEN ROBERT JESSIE DECEASED",
-      "homeowner_name": "CLINE BRANDY",
+      "homeowner_name": "Brandy Cline",
       "not_actionable": false,
       "amount": "",
       "legal": "Survey - Name: BABB, D E W SY Survey: 33 Acres: 2.00",
@@ -4322,9 +4381,12 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000067774%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week"
+        "New this week",
+        "Heir identified"
       ],
-      "score": 50
+      "score": 50,
+      "affiant_name": "Brandy Cline",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000067760",
@@ -4420,7 +4482,8 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000067672",
@@ -4452,7 +4515,8 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000067664",
@@ -5028,7 +5092,9 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "will_status": "Intestate (no will)",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000066978",
@@ -5508,7 +5574,8 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000066603",
@@ -5860,7 +5927,8 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000066325",
@@ -6084,7 +6152,9 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "decedent_name": "L. Wurdle Neceased",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000065871",
@@ -6116,7 +6186,9 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "decedent_name": "L. Wundle",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000065860",
