@@ -2,3 +2,7 @@ requests>=2.31.0
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
 playwright>=1.40.0
+pytesseract
+pdf2image
+pillow
+pdfplumber
