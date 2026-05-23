@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import logging
 import re
+import sys
 from datetime import datetime
 from typing import Any
 
@@ -39,54 +40,85 @@ ACTION_WAIT_MS     = 1500
 PAGE_NAV_WAIT_MS   = 2000
 MAX_PAGES          = 25  # safety bound; portal currently has ~18 pages
 
+# Collin County municipalities + postal cities. Used to split the embedded
+# address line ("111 WHEATGRASS LN PRINCETON, TX 75407") into street + city,
+# since the portal concatenates them with no delimiter. Longest names first
+# at match time so multi-word cities (ROYSE CITY, BLUE RIDGE) win over any
+# single-word suffix.
+COLLIN_CITIES = {
+    "ALLEN", "ANNA", "BLUE RIDGE", "CELINA", "DALLAS", "FAIRVIEW",
+    "FARMERSVILLE", "FRISCO", "GARLAND", "JOSEPHINE", "LAVON",
+    "LOWRY CROSSING", "LUCAS", "MCKINNEY", "MELISSA", "MURPHY",
+    "NEVADA", "NEW HOPE", "PARKER", "PLANO", "PRINCETON", "PROSPER",
+    "RICHARDSON", "ROYSE CITY", "SACHSE", "SAINT PAUL", "ST PAUL",
+    "VAN ALSTYNE", "WESTON", "WESTMINSTER", "WYLIE", "CARROLLTON",
+    "THE COLONY", "LITTLE ELM", "COPEVILLE", "WESTON",
+}
+
+
+def _split_street_city(s: str) -> tuple[str, str]:
+    """Split 'STREET CITY' into (street, city) using the Collin city list.
+
+    '111 WHEATGRASS LN PRINCETON' -> ('111 WHEATGRASS LN', 'PRINCETON')
+    '2829 EPPING WAY CELINA'      -> ('2829 EPPING WAY',    'CELINA')
+    """
+    s = s.strip()
+    upper = s.upper()
+    # Try known cities, longest first so 'ROYSE CITY' beats a stray 'CITY'
+    for city in sorted(COLLIN_CITIES, key=len, reverse=True):
+        if upper.endswith(" " + city):
+            street = s[: len(s) - len(city)].strip()
+            return street, city
+    # Fallback: assume the final whitespace-delimited token is the city
+    parts = s.rsplit(" ", 1)
+    if len(parts) == 2:
+        return parts[0].strip(), parts[1].strip()
+    return s, ""
+
 
 def _parse_row_text(text: str) -> dict[str, str]:
-    """Parse one foreclosure row from rendered cell text.
+    """Parse one foreclosure row. Works whether fields are newline-separated
+    OR concatenated into a single line (Playwright's table-row text extraction
+    drops the line breaks, producing e.g.:
 
-    The portal renders each property as a single table cell with newline-
-    or <br>-separated fields, e.g.:
+        111 WHEATGRASS LN PRINCETON, TX 75407City: Unincorporated Area\
+Sale Date: 07/07/2026File Date: 05/21/2026Property Type:Residential Single Family (A1)
 
-        10022 PLAINSMAN LN  FRISCO, TX 75035
-        City: Frisco
-        Sale Date: 06/02/2026
-        File Date: 05/07/2026
-        Property Type: Residential Single Family (A1)
+    so we anchor on the field labels rather than on line structure.)
     """
     rec: dict[str, str] = {}
-    # Split on any newline-ish or HTML break, then strip
-    lines = [seg.strip() for seg in re.split(r"<br\s*/?>|\r\n|\n", text) if seg.strip()]
-    if not lines:
-        return rec
+    t = re.sub(r"\s+", " ", text).strip()
 
-    # First line should contain street + city + state + zip
-    addr_m = re.match(
-        r"(.+?)\s{2,}([A-Z][A-Z\s]+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)",
-        lines[0],
-    )
-    if addr_m:
-        rec["prop_address"] = addr_m.group(1).strip().upper()
-        rec["prop_city"]    = addr_m.group(2).strip().upper()
-        rec["prop_state"]   = addr_m.group(3).strip()
-        rec["prop_zip"]     = addr_m.group(4).strip()[:5]
-    else:
-        # Fallback: store the raw first line so we have something
-        rec["prop_address"] = lines[0].strip().upper()
+    # Labels that bound one field from the next, used as stop-points.
+    NEXT = r"(?:\s*(?:City|Sale\s*Date|File\s*Date|Property\s*Type|Status)\s*:|$)"
 
-    # Remaining lines are "Label: Value" pairs
-    for line in lines[1:]:
-        m = re.match(r"([A-Za-z][A-Za-z\s]*?)\s*:\s*(.+)", line)
-        if not m:
-            continue
-        label = m.group(1).strip().lower()
-        value = m.group(2).strip()
-        if "sale" in label and "date" in label:
-            rec["sale_date"] = value
-        elif "file" in label and "date" in label:
-            rec["file_date"] = value
-        elif "property type" in label:
-            rec["property_type"] = value
-        elif label == "city" and not rec.get("prop_city"):
-            rec["prop_city"] = value.upper()
+    m = re.search(rf"Property\s*Type\s*:\s*(.+?){NEXT}", t, re.I)
+    if m:
+        rec["property_type"] = m.group(1).strip()
+
+    m = re.search(r"Sale\s*Date\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", t, re.I)
+    if m:
+        rec["sale_date"] = m.group(1)
+
+    m = re.search(r"File\s*Date\s*:\s*(\d{1,2}/\d{1,2}/\d{4})", t, re.I)
+    if m:
+        rec["file_date"] = m.group(1)
+
+    m = re.search(rf"City\s*:\s*(.+?){NEXT}", t, re.I)
+    if m:
+        rec["jurisdiction"] = m.group(1).strip()
+
+    # Address = the head of the row, before the first field label, ending in
+    # ", TX <zip>". Split off everything from the first label onward.
+    head = re.split(r"\s*(?:City|Sale\s*Date|File\s*Date|Property\s*Type)\s*:", t, maxsplit=1)[0].strip()
+    am = re.search(r"(.+?),\s*TX\s+(\d{5})", head)
+    if am:
+        street_city = am.group(1).strip()
+        rec["prop_zip"]   = am.group(2)
+        rec["prop_state"] = "TX"
+        street, city = _split_street_city(street_city)
+        rec["prop_address"] = street.upper()
+        rec["prop_city"]    = city.upper()
 
     return rec
 
@@ -104,6 +136,46 @@ async def _set_max_page_size(page: Page) -> None:
         except Exception:
             continue
     log.info("  page size adjust skipped (control not found)")
+
+
+async def _set_filed_date_filter(page: Page, date_from: datetime, date_to: datetime) -> bool:
+    """Fill the 'Filed Date Start' / 'Filed Date End' inputs to narrow results
+    to the target window at the source. Best-effort: returns True if both
+    fields were filled. The Python-side date filter is the safety net either
+    way, so a False here is non-fatal.
+    """
+    start_str = date_from.strftime("%-m/%-d/%Y") if sys.platform != "win32" else date_from.strftime("%#m/%#d/%Y")
+    end_str   = date_to.strftime("%-m/%-d/%Y")   if sys.platform != "win32" else date_to.strftime("%#m/%#d/%Y")
+
+    filled = 0
+    for label, value in (("Filed Date Start", start_str), ("Filed Date End", end_str)):
+        candidates = [
+            page.get_by_label(label, exact=False),
+            page.get_by_placeholder(label),
+            page.locator(f'input[aria-label*="{label}"]'),
+            page.locator(f'xpath=//label[contains(text(), "{label}")]/following::input[1]'),
+        ]
+        for cand in candidates:
+            try:
+                if await cand.count() == 0:
+                    continue
+                inp = cand.first
+                await inp.click(timeout=2000)
+                await inp.fill("")
+                await inp.type(value, delay=40)
+                await page.keyboard.press("Tab")
+                await page.wait_for_timeout(ACTION_WAIT_MS)
+                filled += 1
+                log.info("  set %s = %s", label, value)
+                break
+            except Exception:
+                continue
+
+    if filled == 2:
+        await page.wait_for_timeout(PAGE_NAV_WAIT_MS)  # let results refresh
+        return True
+    log.info("  filed-date filter not fully set (%d/2) — will filter in Python", filled)
+    return False
 
 
 async def _click_next_page(page: Page) -> bool:
@@ -133,40 +205,56 @@ async def _click_next_page(page: Page) -> bool:
 
 async def _extract_rows_on_page(page: Page) -> list[dict[str, str]]:
     """Pull all visible foreclosure rows from the current page."""
-    # The portal renders each property as a row. We try a few strategies
-    # because the DOM may vary; the most reliable signal is text containing
-    # 'Sale Date' and 'File Date' in the same block.
-    candidate_selectors = [
-        "table tbody tr",
-        ".property-card",
-        ".listing-row",
-        ".result-row",
-        "[class*='property']",
-        "[class*='result']",
-    ]
-
     blocks: list[str] = []
-    for sel in candidate_selectors:
-        try:
-            loc = page.locator(sel)
-            n = await loc.count()
-            if n == 0:
-                continue
-            texts = await loc.all_text_contents()
-            # Keep only blocks that look like a foreclosure row
-            for t in texts:
-                if "Sale Date" in t and "File Date" in t:
-                    blocks.append(t)
-            if blocks:
-                log.info("  matched %d rows via selector: %s", len(blocks), sel)
-                break
-        except Exception:
-            continue
 
+    # Strategy 1: anchor on the address link in each card. Each result has a
+    # clickable address that links to /DetailPage/{id}; the surrounding card
+    # holds the City/Sale Date/File Date/Property Type fields. We walk up to
+    # the card container and grab its full text.
+    try:
+        links = page.locator('a[href*="DetailPage"], a[href*="Detail"]')
+        n = await links.count()
+        if n:
+            for i in range(n):
+                try:
+                    card = links.nth(i).locator(
+                        'xpath=ancestor::*[self::div or self::li or self::tr][1]'
+                    )
+                    txt = await card.first.inner_text(timeout=1500)
+                    if "Sale Date" in txt and "File Date" in txt:
+                        blocks.append(txt)
+                except Exception:
+                    continue
+            if blocks:
+                log.info("  matched %d cards via address-link anchor", len(blocks))
+    except Exception:
+        pass
+
+    # Strategy 2: common container selectors
     if not blocks:
-        # Last-resort: split the whole body on the address pattern
+        candidate_selectors = [
+            "table tbody tr", ".property-card", ".listing-row",
+            ".result-row", "[class*='property']", "[class*='result']",
+            "[class*='card']", "li",
+        ]
+        for sel in candidate_selectors:
+            try:
+                loc = page.locator(sel)
+                if await loc.count() == 0:
+                    continue
+                texts = await loc.all_text_contents()
+                for t in texts:
+                    if "Sale Date" in t and "File Date" in t:
+                        blocks.append(t)
+                if blocks:
+                    log.info("  matched %d rows via selector: %s", len(blocks), sel)
+                    break
+            except Exception:
+                continue
+
+    # Strategy 3: split whole body on the address pattern
+    if not blocks:
         body_text = await page.locator("body").inner_text()
-        # Try a per-row split using "File Date:" as a tail marker
         chunks = re.split(r"(?=\d+\s+[A-Z].+?,\s*TX\s+\d{5})", body_text)
         for c in chunks:
             if "Sale Date" in c and "File Date" in c:
@@ -236,6 +324,9 @@ async def _scrape_with_context(
             log.warning("Network-idle timeout, continuing anyway")
         await page.wait_for_timeout(INIT_WAIT_MS)
 
+        # Narrow to our date window at the source if possible (drops ~460
+        # records to ~20). Python-side filter still runs as a safety net.
+        await _set_filed_date_filter(page, date_from, date_to)
         await _set_max_page_size(page)
 
         # Paginate. We don't rely on the UI Filed Date filter because we
@@ -278,6 +369,8 @@ def _build_records(
     skipped_type   = 0
     skipped_date   = 0
     skipped_parse  = 0
+    d_from = date_from.date()
+    d_to   = date_to.date()
 
     for r in raw_rows:
         pt = r.get("property_type", "")
@@ -286,11 +379,11 @@ def _build_records(
             continue
         fd_raw = r.get("file_date", "")
         try:
-            fd = datetime.strptime(fd_raw, "%m/%d/%Y")
+            fd = datetime.strptime(fd_raw, "%m/%d/%Y").date()
         except (ValueError, TypeError):
             skipped_parse += 1
             continue
-        if fd < date_from or fd > date_to:
+        if fd < d_from or fd > d_to:
             skipped_date += 1
             continue
 
