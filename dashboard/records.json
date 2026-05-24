@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-05-23T22:26:26.736681+00:00",
+  "fetched_at": "2026-05-24T09:38:53.282877+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "5/16/2026",
-    "to": "5/23/2026"
+    "from": "5/17/2026",
+    "to": "5/24/2026"
   },
   "total": 221,
   "actionable": 205,
@@ -87,9 +87,9 @@
       "filed": "5/22/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "Seifrick Norma Jean",
+      "owner": "Kevin Keeney",
       "grantee": "Seifrick John M.",
-      "homeowner_name": "SEIFRICK NORMA JEAN",
+      "homeowner_name": "Kevin Keeney",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -110,9 +110,12 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "Kevin Keeney",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000068794",
@@ -668,9 +671,9 @@
       "filed": "5/20/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "MEEKS DEBORAH LYNN",
+      "owner": "Crystal Perez",
       "grantee": "MEEKS THOMAS JEFFERSON JR DECEASED",
-      "homeowner_name": "MEEKS DEBORAH LYNN",
+      "homeowner_name": "Crystal Perez",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: HILLSIDE VILLAGE #1 ALLEN Lot: 24 Block: A Reference - 5/84",
@@ -691,9 +694,14 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "Crystal Perez",
+      "affiant_address": "3407 Maggie RD, (Welissa, Texas 754 the age of 18 years, and have never been convicted of a felony, and | am compete testimony",
+      "mail_address_doc": "3407 Maggie RD, (Welissa, Texas 754 the age of 18 years, and have never been convicted of a felony, and | am compete testimony",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000067196",
@@ -2284,38 +2292,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000068092",
-      "doc_type": "ABSTRACT OF JUDGMENT",
-      "filed": "5/21/2026",
-      "cat": "JUD",
-      "cat_label": "Judgment",
-      "owner": "CAPITAL ONE NA",
-      "grantee": "JONES SHAREE S",
-      "homeowner_name": "CAPITAL ONE NA",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "LEGACY DR",
-      "prop_city": "PLANO",
-      "prop_state": "TX",
-      "prop_zip": "75024",
-      "mail_address": "PO BOX 460189",
-      "mail_city": "HOUSTON",
-      "mail_state": "TX",
-      "mail_zip": "77056",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000068092%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Judgment lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000068089",
       "doc_type": "ABSTRACT OF JUDGMENT",
       "filed": "5/21/2026",
@@ -2341,6 +2317,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000068089%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Judgment lien",
+        "New this week"
+      ],
+      "score": 55
+    },
+    {
+      "doc_num": "2026000068092",
+      "doc_type": "ABSTRACT OF JUDGMENT",
+      "filed": "5/21/2026",
+      "cat": "JUD",
+      "cat_label": "Judgment",
+      "owner": "CAPITAL ONE NA",
+      "grantee": "JONES SHAREE S",
+      "homeowner_name": "CAPITAL ONE NA",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "LEGACY DR",
+      "prop_city": "PLANO",
+      "prop_state": "TX",
+      "prop_zip": "75024",
+      "mail_address": "PO BOX 460189",
+      "mail_city": "HOUSTON",
+      "mail_state": "TX",
+      "mail_zip": "77056",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000068092%22%5D&searchType=advancedSearch",
       "flags": [
         "Judgment lien",
         "New this week"
@@ -3546,38 +3554,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000066273",
-      "doc_type": "LIEN",
-      "filed": "5/18/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "TEXAS HEALTH PLANO",
-      "grantee": "ALZATE OMAR MORA",
-      "homeowner_name": "TEXAS HEALTH PLANO",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "PARKER RD",
-      "prop_city": "PLANO",
-      "prop_state": "TX",
-      "prop_zip": "75093",
-      "mail_address": "640 W SOUTHLAKE BLVD",
-      "mail_city": "SOUTHLAKE",
-      "mail_state": "TX",
-      "mail_zip": "76092",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "6794747",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000066273%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000066274",
       "doc_type": "LIEN",
       "filed": "5/18/2026",
@@ -3603,6 +3579,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000066274%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 55
+    },
+    {
+      "doc_num": "2026000066273",
+      "doc_type": "LIEN",
+      "filed": "5/18/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "TEXAS HEALTH PLANO",
+      "grantee": "ALZATE OMAR MORA",
+      "homeowner_name": "TEXAS HEALTH PLANO",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "PARKER RD",
+      "prop_city": "PLANO",
+      "prop_state": "TX",
+      "prop_zip": "75093",
+      "mail_address": "640 W SOUTHLAKE BLVD",
+      "mail_city": "SOUTHLAKE",
+      "mail_state": "TX",
+      "mail_zip": "76092",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "6794747",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000066273%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
