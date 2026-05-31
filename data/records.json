@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-05-30T09:32:24.823327+00:00",
+  "fetched_at": "2026-05-31T09:59:42.526684+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "5/23/2026",
-    "to": "5/30/2026"
+    "from": "5/24/2026",
+    "to": "5/31/2026"
   },
   "total": 144,
   "actionable": 116,
@@ -107,10 +107,7 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70,
-      "decedent_name": "Esfate IRENE HARRIS",
-      "will_status": "Will referenced",
-      "doc_read_ok": false
+      "score": 70
     },
     {
       "doc_num": "2026000071282",
@@ -406,9 +403,9 @@
       "filed": "5/26/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "Chadley Keith Houchin",
+      "owner": "HOUCHIN CHADLEY KEITH",
       "grantee": "NIKKOS NIKOLAS RAINN DECEASED",
-      "homeowner_name": "Chadley Keith Houchin",
+      "homeowner_name": "HOUCHIN CHADLEY KEITH",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: WYNDEMERE PLANO Lot: 6 Block: A Reference - H/458",
@@ -429,13 +426,9 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build",
-        "Heir identified"
+        "Pre-2000 build"
       ],
-      "score": 70,
-      "affiant_name": "Chadley Keith Houchin",
-      "will_status": "Intestate (no will)",
-      "doc_read_ok": true
+      "score": 70
     },
     {
       "doc_num": "2026000069921",
@@ -1748,9 +1741,9 @@
       "filed": "5/28/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "SHETLER WENDY SUE",
+      "owner": "WENDY SUE SHETLER",
       "grantee": "DELGADO MANUEL JESUS DECEASED",
-      "homeowner_name": "SHETLER WENDY SUE",
+      "homeowner_name": "WENDY SUE SHETLER",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -1770,9 +1763,13 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000071216%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week"
+        "New this week",
+        "Heir identified"
       ],
-      "score": 50
+      "score": 50,
+      "affiant_name": "WENDY SUE SHETLER",
+      "decedent_name": "MANUEL JESUS DELGADO",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000071026",
@@ -1871,38 +1868,6 @@
       "score": 50
     },
     {
-      "doc_num": "2026000070972",
-      "doc_type": "FEDERAL TAX LIEN",
-      "filed": "5/28/2026",
-      "cat": "LNFED",
-      "cat_label": "Federal Lien",
-      "owner": "U S A INTERNAL REVENUE SERVICE",
-      "grantee": "GANO PHILIP",
-      "homeowner_name": "GANO PHILIP",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070972%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Tax lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
       "doc_num": "2026000070969",
       "doc_type": "FEDERAL TAX LIEN",
       "filed": "5/28/2026",
@@ -1928,6 +1893,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070969%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Tax lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000070972",
+      "doc_type": "FEDERAL TAX LIEN",
+      "filed": "5/28/2026",
+      "cat": "LNFED",
+      "cat_label": "Federal Lien",
+      "owner": "U S A INTERNAL REVENUE SERVICE",
+      "grantee": "GANO PHILIP",
+      "homeowner_name": "GANO PHILIP",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070972%22%5D&searchType=advancedSearch",
       "flags": [
         "Tax lien",
         "New this week"
@@ -1967,38 +1964,6 @@
       "score": 50
     },
     {
-      "doc_num": "2026000070966",
-      "doc_type": "FEDERAL TAX LIEN",
-      "filed": "5/28/2026",
-      "cat": "LNFED",
-      "cat_label": "Federal Lien",
-      "owner": "U S A INTERNAL REVENUE SERVICE",
-      "grantee": "WOODS CHARLES H",
-      "homeowner_name": "WOODS CHARLES H",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070966%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Tax lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
       "doc_num": "2026000070956",
       "doc_type": "FEDERAL TAX LIEN",
       "filed": "5/28/2026",
@@ -2024,6 +1989,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070956%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Tax lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000070966",
+      "doc_type": "FEDERAL TAX LIEN",
+      "filed": "5/28/2026",
+      "cat": "LNFED",
+      "cat_label": "Federal Lien",
+      "owner": "U S A INTERNAL REVENUE SERVICE",
+      "grantee": "WOODS CHARLES H",
+      "homeowner_name": "WOODS CHARLES H",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070966%22%5D&searchType=advancedSearch",
       "flags": [
         "Tax lien",
         "New this week"
@@ -2316,7 +2313,9 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "decedent_name": "Decedent Acknowledgement",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000070605",
@@ -3385,7 +3384,10 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50
+      "score": 50,
+      "decedent_name": "VONNIE BETH NEELY",
+      "will_status": "Will referenced",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000069409",
