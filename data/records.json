@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-05-31T09:59:42.526684+00:00",
+  "fetched_at": "2026-06-01T12:47:06.312738+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "5/24/2026",
-    "to": "5/31/2026"
+    "from": "5/25/2026",
+    "to": "6/1/2026"
   },
   "total": 144,
   "actionable": 116,
@@ -107,7 +107,10 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70
+      "score": 70,
+      "decedent_name": "Esfate IRENE HARRIS",
+      "will_status": "Will referenced",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000071282",
@@ -403,9 +406,9 @@
       "filed": "5/26/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "HOUCHIN CHADLEY KEITH",
+      "owner": "Chadley Keith Houchin",
       "grantee": "NIKKOS NIKOLAS RAINN DECEASED",
-      "homeowner_name": "HOUCHIN CHADLEY KEITH",
+      "homeowner_name": "Chadley Keith Houchin",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: WYNDEMERE PLANO Lot: 6 Block: A Reference - H/458",
@@ -426,9 +429,13 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build"
+        "Pre-2000 build",
+        "Heir identified"
       ],
-      "score": 70
+      "score": 70,
+      "affiant_name": "Chadley Keith Houchin",
+      "will_status": "Intestate (no will)",
+      "doc_read_ok": true
     },
     {
       "doc_num": "2026000069921",
@@ -461,9 +468,7 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70,
-      "will_status": "Will referenced",
-      "doc_read_ok": false
+      "score": 70
     },
     {
       "doc_num": "2026000069341",
@@ -1964,38 +1969,6 @@
       "score": 50
     },
     {
-      "doc_num": "2026000070956",
-      "doc_type": "FEDERAL TAX LIEN",
-      "filed": "5/28/2026",
-      "cat": "LNFED",
-      "cat_label": "Federal Lien",
-      "owner": "U S A INTERNAL REVENUE SERVICE",
-      "grantee": "ANTHONSEN VERONICA M",
-      "homeowner_name": "ANTHONSEN VERONICA M",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070956%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Tax lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
       "doc_num": "2026000070966",
       "doc_type": "FEDERAL TAX LIEN",
       "filed": "5/28/2026",
@@ -2021,6 +1994,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070966%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Tax lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000070956",
+      "doc_type": "FEDERAL TAX LIEN",
+      "filed": "5/28/2026",
+      "cat": "LNFED",
+      "cat_label": "Federal Lien",
+      "owner": "U S A INTERNAL REVENUE SERVICE",
+      "grantee": "ANTHONSEN VERONICA M",
+      "homeowner_name": "ANTHONSEN VERONICA M",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070956%22%5D&searchType=advancedSearch",
       "flags": [
         "Tax lien",
         "New this week"
@@ -2483,9 +2488,9 @@
       "filed": "5/27/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "SABRINA Farmersville",
+      "owner": "KING SABRINA BURT",
       "grantee": "BURT MITZI ANN DECEASED",
-      "homeowner_name": "SABRINA Farmersville",
+      "homeowner_name": "KING SABRINA BURT",
       "not_actionable": false,
       "amount": "",
       "legal": "Survey - Acres: 14.796",
@@ -2505,12 +2510,9 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000070177%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week",
-        "Heir identified"
+        "New this week"
       ],
-      "score": 50,
-      "affiant_name": "SABRINA Farmersville",
-      "doc_read_ok": true
+      "score": 50
     },
     {
       "doc_num": "2026000070174",
@@ -3384,10 +3386,7 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50,
-      "decedent_name": "VONNIE BETH NEELY",
-      "will_status": "Will referenced",
-      "doc_read_ok": false
+      "score": 50
     },
     {
       "doc_num": "2026000069409",
