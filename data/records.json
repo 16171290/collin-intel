@@ -1,13 +1,13 @@
 {
-  "fetched_at": "2026-06-20T10:20:58.117150+00:00",
+  "fetched_at": "2026-06-21T10:44:26.570605+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "6/13/2026",
-    "to": "6/20/2026"
+    "from": "6/14/2026",
+    "to": "6/21/2026"
   },
-  "total": 248,
-  "actionable": 229,
-  "with_address": 111,
+  "total": 247,
+  "actionable": 228,
+  "with_address": 110,
   "long_term": 34,
   "records": [
     {
@@ -2753,38 +2753,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000080672",
-      "doc_type": "FEDERAL TAX LIEN",
-      "filed": "6/16/2026",
-      "cat": "LNFED",
-      "cat_label": "Federal Lien",
-      "owner": "U S A INTERNAL REVENUE SERVICE",
-      "grantee": "UHL GEORGE",
-      "homeowner_name": "UHL GEORGE",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "1617 COLONNADE CT",
-      "prop_city": "MCKINNEY",
-      "prop_state": "TX",
-      "prop_zip": "75069",
-      "mail_address": "1617 COLONNADE CT",
-      "mail_city": "MCKINNEY",
-      "mail_state": "TX",
-      "mail_zip": "75069",
-      "year_built": "2023",
-      "sqft": "4766",
-      "market_value": "1006166",
-      "deed_year": "2024",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000080672%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Tax lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000080649",
       "doc_type": "ABSTRACT OF JUDGMENT",
       "filed": "6/16/2026",
@@ -3105,38 +3073,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000079905",
-      "doc_type": "STATE TAX LIEN",
-      "filed": "6/15/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "TEXAS STATE OF",
-      "grantee": "BOBA REPUBLIC PLANO LLC",
-      "homeowner_name": "BOBA REPUBLIC PLANO LLC",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "100 LEGACY DR 00102",
-      "prop_city": "PLANO",
-      "prop_state": "TX",
-      "prop_zip": "75023",
-      "mail_address": "100 LEGACY DR STE 102",
-      "mail_city": "PLANO",
-      "mail_state": "TX",
-      "mail_zip": "75023",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000079905%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000079903",
       "doc_type": "STATE TAX LIEN",
       "filed": "6/15/2026",
@@ -3162,6 +3098,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000079903%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 55
+    },
+    {
+      "doc_num": "2026000079905",
+      "doc_type": "STATE TAX LIEN",
+      "filed": "6/15/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "TEXAS STATE OF",
+      "grantee": "BOBA REPUBLIC PLANO LLC",
+      "homeowner_name": "BOBA REPUBLIC PLANO LLC",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "100 LEGACY DR 00102",
+      "prop_city": "PLANO",
+      "prop_state": "TX",
+      "prop_zip": "75023",
+      "mail_address": "100 LEGACY DR STE 102",
+      "mail_city": "PLANO",
+      "mail_state": "TX",
+      "mail_zip": "75023",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000079905%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -4267,9 +4235,9 @@
       "filed": "6/18/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "Katy Robinson",
+      "owner": "ROBINSON KATY",
       "grantee": "JACKSON JOHN ROWN DECEASED",
-      "homeowner_name": "Katy Robinson",
+      "homeowner_name": "ROBINSON KATY",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: GREENGATE ADDN IV Lot: 32 Block: 19",
@@ -4289,12 +4257,9 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000081811%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week",
-        "Heir identified"
+        "New this week"
       ],
-      "score": 50,
-      "affiant_name": "Katy Robinson",
-      "doc_read_ok": true
+      "score": 50
     },
     {
       "doc_num": "2026000081760",
@@ -5845,38 +5810,6 @@
       "score": 50
     },
     {
-      "doc_num": "2026000080650",
-      "doc_type": "ABSTRACT OF JUDGMENT",
-      "filed": "6/16/2026",
-      "cat": "JUD",
-      "cat_label": "Judgment",
-      "owner": "JPMORGAN CHASE BANK NA",
-      "grantee": "COURTNEY TANGEE",
-      "homeowner_name": "COURTNEY TANGEE",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000080650%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Judgment lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
       "doc_num": "2026000080654",
       "doc_type": "ABSTRACT OF JUDGMENT",
       "filed": "6/16/2026",
@@ -5902,6 +5835,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000080654%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Judgment lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000080650",
+      "doc_type": "ABSTRACT OF JUDGMENT",
+      "filed": "6/16/2026",
+      "cat": "JUD",
+      "cat_label": "Judgment",
+      "owner": "JPMORGAN CHASE BANK NA",
+      "grantee": "COURTNEY TANGEE",
+      "homeowner_name": "COURTNEY TANGEE",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000080650%22%5D&searchType=advancedSearch",
       "flags": [
         "Judgment lien",
         "New this week"
