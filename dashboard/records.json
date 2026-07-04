@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-07-03T10:05:13.469835+00:00",
+  "fetched_at": "2026-07-04T09:30:03.500683+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "6/26/2026",
-    "to": "7/3/2026"
+    "from": "6/27/2026",
+    "to": "7/4/2026"
   },
   "total": 205,
   "actionable": 189,
@@ -1271,38 +1271,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000088402",
-      "doc_type": "LIEN",
-      "filed": "7/1/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "AMERICAN COMPOSITE PRODUCTS LP",
-      "grantee": "CAMDEN HOMES",
-      "homeowner_name": "AMERICAN COMPOSITE PRODUCTS LP",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "Subdivision - Name: CAMDEN PARK ADDN IV Lot: 2 Block: B",
-      "prop_address": "455 EASTHAM LN",
-      "prop_city": "PRINCETON",
-      "prop_state": "TX",
-      "prop_zip": "75407",
-      "mail_address": "PO BOX 217",
-      "mail_city": "PRINCETON",
-      "mail_state": "TX",
-      "mail_zip": "75407",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000088402%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000088405",
       "doc_type": "LIEN",
       "filed": "7/1/2026",
@@ -1328,6 +1296,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000088405%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 55
+    },
+    {
+      "doc_num": "2026000088402",
+      "doc_type": "LIEN",
+      "filed": "7/1/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "AMERICAN COMPOSITE PRODUCTS LP",
+      "grantee": "CAMDEN HOMES",
+      "homeowner_name": "AMERICAN COMPOSITE PRODUCTS LP",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "Subdivision - Name: CAMDEN PARK ADDN IV Lot: 2 Block: B",
+      "prop_address": "455 EASTHAM LN",
+      "prop_city": "PRINCETON",
+      "prop_state": "TX",
+      "prop_zip": "75407",
+      "mail_address": "PO BOX 217",
+      "mail_city": "PRINCETON",
+      "mail_state": "TX",
+      "mail_zip": "75407",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000088402%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -1367,38 +1367,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000088408",
-      "doc_type": "LIEN",
-      "filed": "7/1/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "AMERICAN COMPOSITE PRODUCTS LP",
-      "grantee": "CAMDEN HOMES",
-      "homeowner_name": "AMERICAN COMPOSITE PRODUCTS LP",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "Subdivision - Name: CAMDEN PARK ADDN IV Lot: 8 Block: B",
-      "prop_address": "455 EASTHAM LN",
-      "prop_city": "PRINCETON",
-      "prop_state": "TX",
-      "prop_zip": "75407",
-      "mail_address": "PO BOX 217",
-      "mail_city": "PRINCETON",
-      "mail_state": "TX",
-      "mail_zip": "75407",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000088408%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000088398",
       "doc_type": "LIEN",
       "filed": "7/1/2026",
@@ -1424,6 +1392,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000088398%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 55
+    },
+    {
+      "doc_num": "2026000088408",
+      "doc_type": "LIEN",
+      "filed": "7/1/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "AMERICAN COMPOSITE PRODUCTS LP",
+      "grantee": "CAMDEN HOMES",
+      "homeowner_name": "AMERICAN COMPOSITE PRODUCTS LP",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "Subdivision - Name: CAMDEN PARK ADDN IV Lot: 8 Block: B",
+      "prop_address": "455 EASTHAM LN",
+      "prop_city": "PRINCETON",
+      "prop_state": "TX",
+      "prop_zip": "75407",
+      "mail_address": "PO BOX 217",
+      "mail_city": "PRINCETON",
+      "mail_state": "TX",
+      "mail_zip": "75407",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000088408%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -2263,38 +2263,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000087570",
-      "doc_type": "STATE TAX LIEN",
-      "filed": "6/30/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "TEXAS STATE OF",
-      "grantee": "WINPIN 85 INVESTMENTS LLC",
-      "homeowner_name": "WINPIN 85 INVESTMENTS LLC",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "131 W SPRING CREEK PKWY",
-      "prop_city": "PLANO",
-      "prop_state": "TX",
-      "prop_zip": "75023",
-      "mail_address": "1415 MOONSTONE",
-      "mail_city": "BREA",
-      "mail_state": "CA",
-      "mail_zip": "92821",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000087570%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000087575",
       "doc_type": "STATE TAX LIEN",
       "filed": "6/30/2026",
@@ -2320,6 +2288,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000087575%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 55
+    },
+    {
+      "doc_num": "2026000087570",
+      "doc_type": "STATE TAX LIEN",
+      "filed": "6/30/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "TEXAS STATE OF",
+      "grantee": "WINPIN 85 INVESTMENTS LLC",
+      "homeowner_name": "WINPIN 85 INVESTMENTS LLC",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "131 W SPRING CREEK PKWY",
+      "prop_city": "PLANO",
+      "prop_state": "TX",
+      "prop_zip": "75023",
+      "mail_address": "1415 MOONSTONE",
+      "mail_city": "BREA",
+      "mail_state": "CA",
+      "mail_zip": "92821",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000087570%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -3802,9 +3802,7 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50,
-      "will_status": "Will referenced",
-      "doc_read_ok": false
+      "score": 50
     },
     {
       "doc_num": "2026000088328",
