@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-08-08T07:46:27.480906+00:00",
+  "fetched_at": "2026-08-09T07:37:18.216486+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "8/1/2026",
-    "to": "8/8/2026"
+    "from": "8/2/2026",
+    "to": "8/9/2026"
   },
   "total": 253,
   "actionable": 233,
@@ -179,6 +179,39 @@
       "score": 70
     },
     {
+      "doc_num": "2026000106522",
+      "doc_type": "LIEN",
+      "filed": "8/6/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "WYLIE CITY OF",
+      "grantee": "RICHARDSON DON FAMILY TRUST",
+      "homeowner_name": "WYLIE CITY OF",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "Subdivision - Name: TWIN LAKES SUBD 1 Lot: 8 Block: C",
+      "prop_address": "307 N BALLARD AVE",
+      "prop_city": "WYLIE",
+      "prop_state": "TX",
+      "prop_zip": "75098",
+      "mail_address": "307 N BALLARD AVE",
+      "mail_city": "WYLIE",
+      "mail_state": "TX",
+      "mail_zip": "75098",
+      "year_built": "1950",
+      "sqft": "1216",
+      "market_value": "307969",
+      "deed_year": "2015",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000106522%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week",
+        "Pre-2000 build"
+      ],
+      "score": 70
+    },
+    {
       "doc_num": "2026000106528",
       "doc_type": "LIEN",
       "filed": "8/6/2026",
@@ -237,39 +270,6 @@
       "deed_year": "2015",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000106525%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week",
-        "Pre-2000 build"
-      ],
-      "score": 70
-    },
-    {
-      "doc_num": "2026000106522",
-      "doc_type": "LIEN",
-      "filed": "8/6/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "WYLIE CITY OF",
-      "grantee": "RICHARDSON DON FAMILY TRUST",
-      "homeowner_name": "WYLIE CITY OF",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "Subdivision - Name: TWIN LAKES SUBD 1 Lot: 8 Block: C",
-      "prop_address": "307 N BALLARD AVE",
-      "prop_city": "WYLIE",
-      "prop_state": "TX",
-      "prop_zip": "75098",
-      "mail_address": "307 N BALLARD AVE",
-      "mail_city": "WYLIE",
-      "mail_state": "TX",
-      "mail_zip": "75098",
-      "year_built": "1950",
-      "sqft": "1216",
-      "market_value": "307969",
-      "deed_year": "2015",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000106522%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week",
@@ -474,7 +474,10 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70
+      "score": 70,
+      "decedent_name": "Roger William Miller",
+      "will_status": "Will referenced",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000106211",
@@ -745,6 +748,39 @@
       "score": 70
     },
     {
+      "doc_num": "2026000105530",
+      "doc_type": "FEDERAL TAX LIEN",
+      "filed": "8/5/2026",
+      "cat": "LNFED",
+      "cat_label": "Federal Lien",
+      "owner": "U S A INTERNAL REVENUE SERVICE",
+      "grantee": "SMITH TIMOTHY L",
+      "homeowner_name": "SMITH TIMOTHY L",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "102 SHANNON DR",
+      "prop_city": "ALLEN",
+      "prop_state": "TX",
+      "prop_zip": "75002",
+      "mail_address": "102 SHANNON DR",
+      "mail_city": "ALLEN",
+      "mail_state": "TX",
+      "mail_zip": "75002",
+      "year_built": "1990",
+      "sqft": "1907",
+      "market_value": "389473",
+      "deed_year": "1990",
+      "long_term_owner": true,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000105530%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Tax lien",
+        "New this week",
+        "Pre-2000 build"
+      ],
+      "score": 70
+    },
+    {
       "doc_num": "2026000105532",
       "doc_type": "FEDERAL TAX LIEN",
       "filed": "8/5/2026",
@@ -803,39 +839,6 @@
       "deed_year": "2003",
       "long_term_owner": true,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000105533%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Tax lien",
-        "New this week",
-        "Pre-2000 build"
-      ],
-      "score": 70
-    },
-    {
-      "doc_num": "2026000105530",
-      "doc_type": "FEDERAL TAX LIEN",
-      "filed": "8/5/2026",
-      "cat": "LNFED",
-      "cat_label": "Federal Lien",
-      "owner": "U S A INTERNAL REVENUE SERVICE",
-      "grantee": "SMITH TIMOTHY L",
-      "homeowner_name": "SMITH TIMOTHY L",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "102 SHANNON DR",
-      "prop_city": "ALLEN",
-      "prop_state": "TX",
-      "prop_zip": "75002",
-      "mail_address": "102 SHANNON DR",
-      "mail_city": "ALLEN",
-      "mail_state": "TX",
-      "mail_zip": "75002",
-      "year_built": "1990",
-      "sqft": "1907",
-      "market_value": "389473",
-      "deed_year": "1990",
-      "long_term_owner": true,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000105530%22%5D&searchType=advancedSearch",
       "flags": [
         "Tax lien",
         "New this week",
@@ -1039,9 +1042,7 @@
         "New this week",
         "Pre-2000 build"
       ],
-      "score": 70,
-      "will_status": "Will referenced",
-      "doc_read_ok": false
+      "score": 70
     },
     {
       "doc_num": "2026000104568",
@@ -1531,7 +1532,10 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 55
+      "score": 55,
+      "will_status": "Intestate (no will)",
+      "legal_description": "There was no administration had on the estate of Decedent and none is contemplated for the reason that there is no necessity for an administration. All of the debts of the said Decedent, including funeral expenses and expenses of last illness, have been paid in full. That the estate of the Decedent was under the sum of 1,000,000.00, as a result of which, neither Federal Estate Taxes nor State Inheritance Taxes are due. 1 2026 - 2026000106407 08/06/2026 03:28 PM Page 2 of 6 2 The undersigned A ffiant, being the Wo Me of Decedent named herein, states that all foregoing statements are true and correct, and that all the allegations of the foregoing Affidavit are true in substance and in fact, and no material fact or circumstance has been omitted from this Affidavit. The following persons have knowledge regarding the decedent, the identity of decedent\u2019s children, if any, parents, or siblings, if any: L. Rachowd Prrung Suflend of Decedent\u2019s having known Decedent for over CAN years. I am aware of the penalties of perjury under Federal Law, whic affidavit, pursuant to 18 U.S.C.S., Section 1621 wherein it is provided ay fined or imprisoned not more than 5 years, or both. I am also aware that perjq affidavit is a criminal act pursuant to Section 37.02 of the Texas Penal Code. P WITNESS MY HAND THIS ~ QU \u2014 NOTARY PUBLIC, STATE OF TEXAS [Acknowledgment on the following page/. 2026 - 2026000106407 08/06/2026 03:28 PM Page 3 of 6 ACKNOWLEDGEMENT STATE OF TEXAS ' COUNTY OF { allin ' This instrument was acknowledged before me this__-\u00a53* day of. AY Ae 2026, by D Or 7 , known to me to be th\u00e9 p is subscribed to the foregoing instrument, and \u2018acknowledged to me that [he/she] executed the purposes and consideration therein expressed. [Notary Seal] NOTARY PU i LA tage Mage age ne A As NABELLE ALEZIA DELACRUZ NOTARY PUBLIC STATE OF TEXAS ID# 135550662 Comm. Expires 03-10-2030 f 2026 - 2026000106407 08/06/2026 03:28 PM Page 4 of 6 DISINTERESTED PARTY #1 STATE OF TEXAS ' ' COUNTY OF olin personally appeared Lands, Wows. of Lucy Ma My ioe ry who by me being duly deposes and states: Mein rey \u201cFy J, the undersigned, being a friend of Decedent\u2019s and having known Decedent for over \\O___ years, hereby state on oath, that I am personally familiar with the fa of 20 a , and that all the allegations of the foregoing ate faWy are ti fact, that Lucy Mabry was only married toWillian Malsand they lived ts ; ser his death on \\ ja iol 10 L\u00a5 that \\_ children was born to that union, na from this affidavit. WITNESS MY HAND THIS 6 DAY {QQ STATE OF TEXAS c own to me to be the person whose \u00bb and acknowledged and sworn to me that he/she executed 2026 - 2026000106407 08/06/2026 03:28 PM Page 5 of 6 DISINTERESTED PARTY #2 STATE OF TEXAS ' Q ' COUNTY OF Co (lin ' BEFORE Mg, the undersigned hoes Public, in and for said County and State, gh Wis day did personally appeared Alc A tmumelof KU Cu S ahs C A , who by me being oath, deposes and states: I, the undersigned, being a friend of Decedent\u2019s and having known Decedent for over of",
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000106369",
@@ -2110,38 +2114,6 @@
       "score": 55
     },
     {
-      "doc_num": "2026000105521",
-      "doc_type": "FEDERAL TAX LIEN",
-      "filed": "8/5/2026",
-      "cat": "LNFED",
-      "cat_label": "Federal Lien",
-      "owner": "U S A INTERNAL REVENUE SERVICE",
-      "grantee": "WINSTON SHELDON D",
-      "homeowner_name": "WINSTON SHELDON D",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "1710 BALBOA PL",
-      "prop_city": "CELINA",
-      "prop_state": "TX",
-      "prop_zip": "75009",
-      "mail_address": "4900 UNION PARK BLVD E",
-      "mail_city": "LITTLE ELM",
-      "mail_state": "TX",
-      "mail_zip": "76227",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000105521%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Tax lien",
-        "New this week"
-      ],
-      "score": 55
-    },
-    {
       "doc_num": "2026000105520",
       "doc_type": "FEDERAL TAX LIEN",
       "filed": "8/5/2026",
@@ -2167,6 +2139,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000105520%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Tax lien",
+        "New this week"
+      ],
+      "score": 55
+    },
+    {
+      "doc_num": "2026000105521",
+      "doc_type": "FEDERAL TAX LIEN",
+      "filed": "8/5/2026",
+      "cat": "LNFED",
+      "cat_label": "Federal Lien",
+      "owner": "U S A INTERNAL REVENUE SERVICE",
+      "grantee": "WINSTON SHELDON D",
+      "homeowner_name": "WINSTON SHELDON D",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "1710 BALBOA PL",
+      "prop_city": "CELINA",
+      "prop_state": "TX",
+      "prop_zip": "75009",
+      "mail_address": "4900 UNION PARK BLVD E",
+      "mail_city": "LITTLE ELM",
+      "mail_state": "TX",
+      "mail_zip": "76227",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000105521%22%5D&searchType=advancedSearch",
       "flags": [
         "Tax lien",
         "New this week"
@@ -2396,8 +2400,7 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 55,
-      "doc_read_ok": false
+      "score": 55
     },
     {
       "doc_num": "2026000105266",
@@ -3141,9 +3144,9 @@
       "filed": "8/3/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "LEON LEONARD",
+      "owner": "LEONARD LEON",
       "grantee": "STEVENS KAREN L DECEASED",
-      "homeowner_name": "LEON LEONARD",
+      "homeowner_name": "LEONARD LEON",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: FALL CREEK #2 ALLEN Lot: 20 Block: B Reference - 2013/412",
@@ -3163,12 +3166,9 @@
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000104445%22%5D&searchType=advancedSearch",
       "flags": [
         "Probate / estate",
-        "New this week",
-        "Heir identified"
+        "New this week"
       ],
-      "score": 55,
-      "affiant_name": "LEON LEONARD",
-      "doc_read_ok": true
+      "score": 55
     },
     {
       "doc_num": "2026000104423",
@@ -4804,8 +4804,7 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50,
-      "doc_read_ok": false
+      "score": 50
     },
     {
       "doc_num": "2026000105515",
