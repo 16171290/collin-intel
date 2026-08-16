@@ -1,12 +1,12 @@
 {
-  "fetched_at": "2026-08-15T07:33:38.864802+00:00",
+  "fetched_at": "2026-08-16T07:31:44.645516+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "8/8/2026",
-    "to": "8/15/2026"
+    "from": "8/9/2026",
+    "to": "8/16/2026"
   },
-  "total": 371,
-  "actionable": 349,
+  "total": 370,
+  "actionable": 348,
   "with_address": 211,
   "long_term": 30,
   "records": [
@@ -1546,9 +1546,9 @@
       "filed": "8/11/2026",
       "cat": "PRO",
       "cat_label": "Affidavit of Heirship",
-      "owner": "James A. Wasson",
+      "owner": "WASSON JAMES A",
       "grantee": "WASSON KATHY L DECEASED",
-      "homeowner_name": "James A. Wasson",
+      "homeowner_name": "WASSON JAMES A",
       "not_actionable": false,
       "amount": "",
       "legal": "Subdivision - Name: ALLEN NORTH PHASE 3 ALLEN Lot: 12 Block: C Reference - J/534",
@@ -1569,14 +1569,10 @@
       "flags": [
         "Probate / estate",
         "New this week",
-        "Pre-2000 build",
-        "Heir identified"
+        "Pre-2000 build"
       ],
       "score": 70,
-      "affiant_name": "James A. Wasson",
-      "decedent_name": "L. Wasson",
-      "will_status": "Will referenced",
-      "doc_read_ok": true
+      "doc_read_ok": false
     },
     {
       "doc_num": "2026000107822",
@@ -6681,9 +6677,7 @@
         "Probate / estate",
         "New this week"
       ],
-      "score": 50,
-      "will_status": "Will referenced",
-      "doc_read_ok": false
+      "score": 50
     },
     {
       "doc_num": "2026000109485",
@@ -6814,38 +6808,6 @@
       "score": 50
     },
     {
-      "doc_num": "2026000109416",
-      "doc_type": "STATE TAX LIEN",
-      "filed": "8/13/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "TEXAS STATE OF",
-      "grantee": "RED CHILI INDIAN RESTAURANT LLC",
-      "homeowner_name": "RED CHILI INDIAN RESTAURANT LLC",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000109416%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
       "doc_num": "2026000109414",
       "doc_type": "STATE TAX LIEN",
       "filed": "8/13/2026",
@@ -6871,6 +6833,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000109414%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000109416",
+      "doc_type": "STATE TAX LIEN",
+      "filed": "8/13/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "TEXAS STATE OF",
+      "grantee": "RED CHILI INDIAN RESTAURANT LLC",
+      "homeowner_name": "RED CHILI INDIAN RESTAURANT LLC",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000109416%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -6910,14 +6904,14 @@
       "score": 50
     },
     {
-      "doc_num": "2026000109407",
+      "doc_num": "2026000109413",
       "doc_type": "STATE TAX LIEN",
       "filed": "8/13/2026",
       "cat": "LN",
       "cat_label": "Lien",
       "owner": "TEXAS STATE OF",
-      "grantee": "ITERES GROUP LP",
-      "homeowner_name": "ITERES GROUP LP",
+      "grantee": "SIP CITY LLC",
+      "homeowner_name": "SIP CITY LLC",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -6934,7 +6928,7 @@
       "market_value": "",
       "deed_year": "",
       "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000109407%22%5D&searchType=advancedSearch",
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000109413%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -6974,14 +6968,14 @@
       "score": 50
     },
     {
-      "doc_num": "2026000109413",
+      "doc_num": "2026000109407",
       "doc_type": "STATE TAX LIEN",
       "filed": "8/13/2026",
       "cat": "LN",
       "cat_label": "Lien",
       "owner": "TEXAS STATE OF",
-      "grantee": "SIP CITY LLC",
-      "homeowner_name": "SIP CITY LLC",
+      "grantee": "ITERES GROUP LP",
+      "homeowner_name": "ITERES GROUP LP",
       "not_actionable": false,
       "amount": "",
       "legal": "",
@@ -6998,7 +6992,7 @@
       "market_value": "",
       "deed_year": "",
       "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000109413%22%5D&searchType=advancedSearch",
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000109407%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -9864,70 +9858,6 @@
       "score": 50
     },
     {
-      "doc_num": "2026000107282",
-      "doc_type": "STATE TAX LIEN",
-      "filed": "8/10/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "TEXAS STATE OF",
-      "grantee": "GHALY MARY",
-      "homeowner_name": "GHALY MARY",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000107282%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
-      "doc_num": "2026000107299",
-      "doc_type": "STATE TAX LIEN",
-      "filed": "8/10/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "TEXAS STATE OF",
-      "grantee": "WOPOLLOCK CONCEPTS LLC",
-      "homeowner_name": "WOPOLLOCK CONCEPTS LLC",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000107299%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
       "doc_num": "2026000107249",
       "doc_type": "STATE TAX LIEN",
       "filed": "8/10/2026",
@@ -9953,6 +9883,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000107249%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000107282",
+      "doc_type": "STATE TAX LIEN",
+      "filed": "8/10/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "TEXAS STATE OF",
+      "grantee": "GHALY MARY",
+      "homeowner_name": "GHALY MARY",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000107282%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
