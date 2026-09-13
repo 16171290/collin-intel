@@ -1,12 +1,12 @@
 {
-  "fetched_at": "2026-09-12T07:15:24.917922+00:00",
+  "fetched_at": "2026-09-13T07:14:56.191722+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "9/5/2026",
-    "to": "9/12/2026"
+    "from": "9/6/2026",
+    "to": "9/13/2026"
   },
-  "total": 259,
-  "actionable": 238,
+  "total": 260,
+  "actionable": 239,
   "with_address": 112,
   "long_term": 19,
   "records": [
@@ -4558,6 +4558,38 @@
       "score": 50
     },
     {
+      "doc_num": "2026000122229",
+      "doc_type": "LIEN",
+      "filed": "9/10/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "METHODIST HEALTH SYSTEM",
+      "grantee": "ARRINGTON JUSTIN",
+      "homeowner_name": "METHODIST HEALTH SYSTEM",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122229%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
       "doc_num": "2026000122226",
       "doc_type": "LIEN",
       "filed": "9/10/2026",
@@ -4583,6 +4615,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122226%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000122252",
+      "doc_type": "LIEN",
+      "filed": "9/10/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "METHODIST HEALTH SYSTEM",
+      "grantee": "SYEDA AMREENA",
+      "homeowner_name": "METHODIST HEALTH SYSTEM",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122252%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -4686,13 +4750,13 @@
       "score": 50
     },
     {
-      "doc_num": "2026000122229",
+      "doc_num": "2026000122284",
       "doc_type": "LIEN",
       "filed": "9/10/2026",
       "cat": "LN",
       "cat_label": "Lien",
       "owner": "METHODIST HEALTH SYSTEM",
-      "grantee": "ARRINGTON JUSTIN",
+      "grantee": "EDELMAN LINDSAY",
       "homeowner_name": "METHODIST HEALTH SYSTEM",
       "not_actionable": false,
       "amount": "",
@@ -4710,7 +4774,7 @@
       "market_value": "",
       "deed_year": "",
       "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122229%22%5D&searchType=advancedSearch",
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122284%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -4750,13 +4814,13 @@
       "score": 50
     },
     {
-      "doc_num": "2026000122252",
+      "doc_num": "2026000122227",
       "doc_type": "LIEN",
       "filed": "9/10/2026",
       "cat": "LN",
       "cat_label": "Lien",
       "owner": "METHODIST HEALTH SYSTEM",
-      "grantee": "SYEDA AMREENA",
+      "grantee": "HUGHES KAMARI",
       "homeowner_name": "METHODIST HEALTH SYSTEM",
       "not_actionable": false,
       "amount": "",
@@ -4774,39 +4838,7 @@
       "market_value": "",
       "deed_year": "",
       "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122252%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
-      "doc_num": "2026000122284",
-      "doc_type": "LIEN",
-      "filed": "9/10/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "METHODIST HEALTH SYSTEM",
-      "grantee": "EDELMAN LINDSAY",
-      "homeowner_name": "METHODIST HEALTH SYSTEM",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122284%22%5D&searchType=advancedSearch",
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122227%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -4846,13 +4878,13 @@
       "score": 50
     },
     {
-      "doc_num": "2026000122227",
+      "doc_num": "2026000122286",
       "doc_type": "LIEN",
       "filed": "9/10/2026",
       "cat": "LN",
       "cat_label": "Lien",
       "owner": "METHODIST HEALTH SYSTEM",
-      "grantee": "HUGHES KAMARI",
+      "grantee": "AVENDANO REBECCA",
       "homeowner_name": "METHODIST HEALTH SYSTEM",
       "not_actionable": false,
       "amount": "",
@@ -4870,7 +4902,7 @@
       "market_value": "",
       "deed_year": "",
       "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122227%22%5D&searchType=advancedSearch",
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122286%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -4903,38 +4935,6 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122285%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
-      "doc_num": "2026000122286",
-      "doc_type": "LIEN",
-      "filed": "9/10/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "METHODIST HEALTH SYSTEM",
-      "grantee": "AVENDANO REBECCA",
-      "homeowner_name": "METHODIST HEALTH SYSTEM",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122286%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
@@ -5095,6 +5095,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122274%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000122277",
+      "doc_type": "LIEN",
+      "filed": "9/10/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "METHODIST HEALTH SYSTEM",
+      "grantee": "VARGAS JORGE GONZALEZ",
+      "homeowner_name": "METHODIST HEALTH SYSTEM",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000122277%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
