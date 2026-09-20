@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-09-19T07:16:39.011896+00:00",
+  "fetched_at": "2026-09-20T07:19:17.322222+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "9/12/2026",
-    "to": "9/19/2026"
+    "from": "9/13/2026",
+    "to": "9/20/2026"
   },
   "total": 296,
   "actionable": 279,
@@ -7956,38 +7956,6 @@
       "score": 50
     },
     {
-      "doc_num": "2026000123341",
-      "doc_type": "LIEN",
-      "filed": "9/14/2026",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "RENU LLC",
-      "grantee": "ACH LEGACY NORTH TX LLC",
-      "homeowner_name": "RENU LLC",
-      "not_actionable": false,
-      "amount": "",
-      "legal": "Subdivision-  Name: SHOPS LEGACY TOWN CTR N RPLT PLANO Lot: 1R Block: C, Reference - 2007 / 601",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "TX",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "TX",
-      "mail_zip": "",
-      "year_built": "",
-      "sqft": "",
-      "market_value": "",
-      "deed_year": "",
-      "long_term_owner": false,
-      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000123341%22%5D&searchType=advancedSearch",
-      "flags": [
-        "Mechanic lien",
-        "New this week"
-      ],
-      "score": 50
-    },
-    {
       "doc_num": "2026000123343",
       "doc_type": "LIEN",
       "filed": "9/14/2026",
@@ -8013,6 +7981,38 @@
       "deed_year": "",
       "long_term_owner": false,
       "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000123343%22%5D&searchType=advancedSearch",
+      "flags": [
+        "Mechanic lien",
+        "New this week"
+      ],
+      "score": 50
+    },
+    {
+      "doc_num": "2026000123341",
+      "doc_type": "LIEN",
+      "filed": "9/14/2026",
+      "cat": "LN",
+      "cat_label": "Lien",
+      "owner": "RENU LLC",
+      "grantee": "ACH LEGACY NORTH TX LLC",
+      "homeowner_name": "RENU LLC",
+      "not_actionable": false,
+      "amount": "",
+      "legal": "Subdivision-  Name: SHOPS LEGACY TOWN CTR N RPLT PLANO Lot: 1R Block: C, Reference - 2007 / 601",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "TX",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "TX",
+      "mail_zip": "",
+      "year_built": "",
+      "sqft": "",
+      "market_value": "",
+      "deed_year": "",
+      "long_term_owner": false,
+      "clerk_url": "https://collin.tx.publicsearch.us/results?department=RP&documentNumberRange=%5B%222026000123341%22%5D&searchType=advancedSearch",
       "flags": [
         "Mechanic lien",
         "New this week"
