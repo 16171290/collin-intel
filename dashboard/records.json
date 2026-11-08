@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-11-07T07:23:49.067343+00:00",
+  "fetched_at": "2026-11-08T07:20:06.371410+00:00",
   "source": "Collin County Clerk / Collin CAD",
   "date_range": {
-    "from": "10/31/2026",
-    "to": "11/7/2026"
+    "from": "11/1/2026",
+    "to": "11/8/2026"
   },
   "total": 335,
   "actionable": 317,
